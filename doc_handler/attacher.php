@@ -8,8 +8,8 @@
 
 //const docIn = 'D:\Temp\data\\';
 //const docOut = 'D:\Temp\out';
-const docIn = __DIR__.'/../raw/temp/';
-const docOut = __DIR__.'/../raw/phpstorm-stubs-2022.3/';
+const docIn = __DIR__ . '/../raw/temp/';
+const docOut = __DIR__ . '/../raw/phpstorm-stubs-2022.3/';
 const line = PHP_EOL;
 const dataArr = [
     'AMQPBasicProperties.getContentType' => 'test comment',
@@ -20,33 +20,33 @@ const dataArr = [
 
 function myPrint(...$args)
 {
-	foreach ($args as $arg) {
-		print_r($arg);
-		echo PHP_EOL;
-	}
+    foreach ($args as $arg) {
+        print_r($arg);
+        echo PHP_EOL;
+    }
 }
 
 function my_dir($dir, $parent = '', &$files = [])
 {
-	myPrint($dir);
+    myPrint($dir);
     if (@$handle = opendir($dir)) { //注意这里要加一个@，不然会有warning错误提示：）
-	    while (($file = readdir($handle)) !== false) {
-		    if ($file != ".." && $file != ".") { //排除根目录
-			    if (is_dir($dir . "/" . $file)) { //如果是子文件夹，就进行递归
-				    my_dir($dir . "/" . $file, $parent . '/' . $file, $files);
-			    } else { //不然就将文件的名字存入数组
-				    $files[] = $parent . '/' . $file;
-			    }
-		    }
-	    }
-	    closedir($handle);
-	    return $files;
+        while (($file = readdir($handle)) !== false) {
+            if ($file != ".." && $file != ".") { //排除根目录
+                if (is_dir($dir . "/" . $file)) { //如果是子文件夹，就进行递归
+                    my_dir($dir . "/" . $file, $parent . '/' . $file, $files);
+                } else { //不然就将文件的名字存入数组
+                    $files[] = $parent . '/' . $file;
+                }
+            }
+        }
+        closedir($handle);
+        return $files;
     }
 }
 
 function isComment($line)
 {
-    foreach (['/*', '*', '*/','#'] as $item) {
+    foreach (['/*', '*', '*/', '#'] as $item) {
         if (strpos($line, $item) === 0) {
             return true;
         }
@@ -59,13 +59,13 @@ function getComment($token, $oldComment)
     if (strpos($token, 'constant.') !== 0)  //不是常量替换下划线
         $token = str_replace('_', '-', $token);
     $file = docIn . $token . '.html';
-    $return='';
+    $return = '';
     if (file_exists($file)) {
         if ($oldComment) {  //保留return行
             $olds = explode("\n", $oldComment);
             foreach ($olds as $old) {
                 $old2 = trim($old);
-                if (strpos($old2, '* @return')===0){
+                if (strpos($old2, '* @return') === 0) {
                     $return = $old;
                     break;
                 }
@@ -118,7 +118,8 @@ function isConst($line)
     return false;
 }
 
-function isVar($line){
+function isVar($line)
+{
     $line = str_replace(' ', '', $line);
     $pre = "$";
     if (strpos($line, $pre) === 0) {
@@ -154,20 +155,20 @@ function handle($name)
                 $newComment = getComment('class.' . $class, $comment);
                 $newContent .= $newComment;
                 $comment = '';    //注释已使用
-            }else if ($function = isFunction($line)) {  //函数方法
-                if (substr($function,0,20)=='PS_UNRESERVE_PREFIX_'){
-                    $function=substr($function,20);
+            } else if ($function = isFunction($line)) {  //函数方法
+                if (substr($function, 0, 20) == 'PS_UNRESERVE_PREFIX_') {
+                    $function = substr($function, 20);
                 }
                 $blankPre = strpos($line, ' ') === 0;    //前面空白是类方法的特征
                 $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
                 $newComment = getComment($function, $comment);
                 $newContent .= $newComment;
                 $comment = '';    //注释已使用
-            }else if ($const = isConst($line)) {    //常量
+            } else if ($const = isConst($line)) {    //常量
                 $newComment = getComment('constant.' . $const, $comment);
                 $newContent .= $newComment;
                 $comment = '';    //注释已使用
-            }else if($var = isVar($line)){  //预定义变量
+            } else if ($var = isVar($line)) {  //预定义变量
                 $newComment = getComment('reserved.variables.' . $var, $comment);
                 $newContent .= $newComment;
                 $comment = '';    //注释已使用
