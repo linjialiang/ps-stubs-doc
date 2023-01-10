@@ -9,7 +9,7 @@
 //const docIn = 'D:\Temp\data\\';
 //const docOut = 'D:\Temp\out';
 const docIn = __DIR__ . '/../raw/temp/';
-const docOut = __DIR__ . '/../raw/phpstorm-stubs-2022.3/';
+const docOut = __DIR__ . '/../raw/phpstorm-stubs-2022.3';
 const line = PHP_EOL;
 const dataArr = [
     'AMQPBasicProperties.getContentType' => 'test comment',
