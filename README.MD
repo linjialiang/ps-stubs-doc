@@ -26,7 +26,7 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
 
    ```shell
    # 1. 进入项目根目录
-   cd /server/www/php-doc/
+   cd ~/git/php-doc/
    # 2.1 移动 php 文档
    mv Download/php_manual_zh.tar.gz ./raw/
    # 2.2 移动 phpStorm 文档
@@ -53,7 +53,7 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
 
    ```shell
    # 1. 进入文档处理程序目录
-   cd /server/www/php-doc/
+   cd ~/git/php-doc/
    cd doc_handler
    # 2. 处理 php文档文件
    php handler.php
@@ -66,7 +66,7 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
    ```shell
    # phpstorm-stubs-2022.3/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
    # 查看目录下，把 非目录的文件 删除即可
-   cd /server/www/php-doc/
+   cd ~/git/php-doc/
    cd ./raw/phpstorm-stubs-2022.3/
    # Linux
    ls --file-type | grep -v /$ | xargs rm -f
