@@ -26,18 +26,22 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
 
    ```shell
    # 1. 进入项目根目录
-   cd ~/git/php-doc/
+   cd ~/git/php-doc/raw/
    # 2.1 移动 php 文档
-   mv Download/php_manual_zh.tar.gz ./raw/
+   mv path/php_manual_zh.tar.gz ./
    # 2.2 移动 phpStorm 文档
-   mv Download/phpstorm-stubs-2022.3.tar.gz ./raw/
+   mv path/phpstorm-stubs-2022.3.tar.gz ./
    # 3. 解压
-   cd ./raw/
    tar -xzf php_manual_zh.tar.gz
+   mv ./php_manual_zh/php-chunked-xhtml ./php-chunked-xhtml
    tar -xzf phpstorm-stubs-2022.3.tar.gz
-   # 4. 解压得到文件夹：
-   # phpstorm-stubs-2022.3    -- phpstorm文档
-   # php-chunked-xhtml        -- php官方文档
+   ```
+   
+   > 解压得到文件夹：
+   
+   ```text
+   phpstorm-stubs-2022.3    -- phpstorm-stubs文档
+   php-chunked-xhtml        -- php官方文档
    ```
 
 2. 修改文件常量
@@ -53,8 +57,7 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
 
    ```shell
    # 1. 进入文档处理程序目录
-   cd ~/git/php-doc/
-   cd doc_handler
+   cd ~/git/php-doc/doc_handler/
    # 2. 处理 php文档文件
    php handler.php
    # 3. 处理 phpstorm文档文件 
@@ -66,8 +69,7 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
    ```shell
    # phpstorm-stubs-2022.3/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
    # 查看目录下，把 非目录的文件 删除即可
-   cd ~/git/php-doc/
-   cd ./raw/phpstorm-stubs-2022.3/
+   cd ~/git/php-doc/raw/phpstorm-stubs-2022.3/
    # Linux
    ls --file-type | grep -v /$ | xargs rm -f
    ```
@@ -81,14 +83,6 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
 1. 保存文档目录
 
    注意：最好把 `phpstorm-stubs-2022.3/` 移至一个可保存不变动的目录，并且目录必须保持全英文路径，避免不必要的麻烦**
-
-   ```shell
-   cd /server/www/php-doc/
-   cd ./raw/
-   rm ~/Documents/phpstorm-stubs
-   mv ./phpstorm-stubs-2022.3 ~/Documents/phpstorm-stubs-2022.3
-   ln -s ~/Documents/phpstorm-stubs-2022.3 ~/Documents/phpstorm-stubs
-   ```
 
 2. 设置引入目录
 
