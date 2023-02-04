@@ -37,7 +37,7 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
    tar -xzf phpstorm-stubs-2022.3.tar.gz
    # 4. 解压得到文件夹：
    # phpstorm-stubs-2022.3    -- phpstorm文档
-   # php-chunked-xhtml 		  -- php官方文档
+   # php-chunked-xhtml        -- php官方文档
    ```
 
 2. 修改文件常量
