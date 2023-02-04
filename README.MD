@@ -8,7 +8,7 @@
 
 根据自己使用的语言下载文档
 
-PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/manual/php_manual_zh.tar.gz)
+PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributions/manual/php_manual_zh.tar.gz)
 
 > 注意：下载时，下载多页面( `Many HTML files` )版本
 
@@ -36,9 +36,9 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
    mv ./php_manual_zh/php-chunked-xhtml ./php-chunked-xhtml
    tar -xzf phpstorm-stubs-2022.3.tar.gz
    ```
-   
+
    > 解压得到文件夹：
-   
+
    ```text
    phpstorm-stubs-2022.3    -- phpstorm-stubs文档
    php-chunked-xhtml        -- php官方文档
@@ -53,7 +53,9 @@ PHP中文文档下载地址：[php_manual_zh](https://www.php.net/distributions/
 
 3. 进行文档处理
 
-   > 注意：原作者建议 php版本是 php7，我这里使用的是php8.2
+   > 注意：推荐使用 php7.x 版本，亲测：
+   > - 使用 php8.2 会打印非常多的警告
+   > - 使用 php7.4 正常执行
 
    ```shell
    # 1. 进入文档处理程序目录
