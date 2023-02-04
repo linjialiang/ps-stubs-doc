@@ -6,17 +6,9 @@
  * Time: 20:47
  */
 
-//const docIn = 'D:\Temp\data\\';
-//const docOut = 'D:\Temp\out';
 const docIn = __DIR__ . '/../raw/temp/';
 const docOut = __DIR__ . '/../raw/phpstorm-stubs-2022.3';
 const line = PHP_EOL;
-const dataArr = [
-    'AMQPBasicProperties.getContentType' => 'test comment',
-    'AMQP_NOPARAM' => 'test const',
-    'class.AMQPBasicProperties' => 'test class',
-];
-
 
 function myPrint(...$args)
 {
@@ -29,12 +21,12 @@ function myPrint(...$args)
 function my_dir($dir, $parent = '', &$files = [])
 {
     myPrint($dir);
-    if (@$handle = opendir($dir)) { //注意这里要加一个@，不然会有warning错误提示：）
+    if (@$handle = opendir($dir)) { // 注意这里要加一个@，不然会有warning错误提示：）
         while (($file = readdir($handle)) !== false) {
-            if ($file != ".." && $file != ".") { //排除根目录
-                if (is_dir($dir . "/" . $file)) { //如果是子文件夹，就进行递归
+            if ($file != ".." && $file != ".") { // 排除根目录
+                if (is_dir($dir . "/" . $file)) { // 如果是子文件夹，就进行递归
                     my_dir($dir . "/" . $file, $parent . '/' . $file, $files);
-                } else { //不然就将文件的名字存入数组
+                } else { // 不然就将文件的名字存入数组
                     $files[] = $parent . '/' . $file;
                 }
             }
@@ -56,12 +48,12 @@ function isComment($line)
 
 function getComment($token, $oldComment)
 {
-    if (strpos($token, 'constant.') !== 0)  //不是常量替换下划线
+    if (strpos($token, 'constant.') !== 0)  // 不是常量替换下划线
         $token = str_replace('_', '-', $token);
     $file = docIn . $token . '.html';
     $return = '';
     if (file_exists($file)) {
-        if ($oldComment) {  //保留return行
+        if ($oldComment) {  // 保留return行
             $olds = explode("\n", $oldComment);
             foreach ($olds as $old) {
                 $old2 = trim($old);
@@ -107,7 +99,6 @@ function isFunction($line)
 
 function isConst($line)
 {
-//    define('AMQP_EX_TYPE_HEADERS', 'headers');
     $line = str_replace(' ', '', $line);
     $pre = "define('";
     if (strpos($line, $pre) === 0) {
@@ -135,46 +126,42 @@ function handle($name)
 {
     $file = docOut . $name;
     $newContent = '';
-    $handle = fopen($file, "r");//以只读方式打开一个文件
-    $i = 0;
+    $handle = fopen($file, "r");// 以只读方式打开一个文件
     $comment = '';
     $class = '';
-    while (!feof($handle)) {//函数检测是否已到达文件末尾
+    while (!feof($handle)) {// 函数检测是否已到达文件末尾
         if ($line = fgets($handle)) {// 从文件指针中读取一行
             $line1 = str_replace(' ', '', $line);
-
-            //注释
+            // 注释
             if (isComment($line1)) {
                 $comment .= $line;
                 continue;
             }
-
-            //类
+            // 类
             if ($clsName = isClass($line)) {
                 $class = $clsName;
                 $newComment = getComment('class.' . $class, $comment);
                 $newContent .= $newComment;
-                $comment = '';    //注释已使用
-            } else if ($function = isFunction($line)) {  //函数方法
+                $comment = '';    // 注释已使用
+            } else if ($function = isFunction($line)) {  // 函数方法
                 if (substr($function, 0, 20) == 'PS_UNRESERVE_PREFIX_') {
                     $function = substr($function, 20);
                 }
-                $blankPre = strpos($line, ' ') === 0;    //前面空白是类方法的特征
+                $blankPre = strpos($line, ' ') === 0;    // 前面空白是类方法的特征
                 $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
                 $newComment = getComment($function, $comment);
                 $newContent .= $newComment;
-                $comment = '';    //注释已使用
-            } else if ($const = isConst($line)) {    //常量
+                $comment = '';    // 注释已使用
+            } else if ($const = isConst($line)) {    // 常量
                 $newComment = getComment('constant.' . $const, $comment);
                 $newContent .= $newComment;
-                $comment = '';    //注释已使用
-            } else if ($var = isVar($line)) {  //预定义变量
+                $comment = '';    // 注释已使用
+            } else if ($var = isVar($line)) {  // 预定义变量
                 $newComment = getComment('reserved.variables.' . $var, $comment);
                 $newContent .= $newComment;
-                $comment = '';    //注释已使用
+                $comment = '';    // 注释已使用
             }
-
-            //没有匹配到任何类型内容
+            // 没有匹配到任何类型内容
             if ($comment) {
                 $newContent .= $comment;
                 $comment = '';
@@ -191,10 +178,9 @@ function handleAll()
     my_dir(docOut, '', $files);
     foreach ($files as $file) {
         $suffix = substr(strrchr($file, '.'), 1);
-        if ($suffix == 'php') {
+        if ($suffix === 'php') {
             handle($file);
             echo $file . line;
-//            break;  //test
         }
     }
 }
