@@ -18,6 +18,12 @@ function myPrint(...$args)
     }
 }
 
+/**
+ * @param $dir
+ * @param $parent
+ * @param $files
+ * @return array|mixed|void
+ */
 function my_dir($dir, $parent = '', &$files = [])
 {
     myPrint($dir);
@@ -53,6 +59,7 @@ function getComment($token, $oldComment)
     $file = DOC_IN_PATH . $token . '.html';
     if (file_exists($file)) {
         $keepLine = '';
+        $keepLine2 = '';
         if ($oldComment) {
             $olds = explode("\n", $oldComment);
             foreach ($olds as $old) {
@@ -61,15 +68,17 @@ function getComment($token, $oldComment)
                     strpos($old2, '* @param') === 0 ||  // 保留参数行
                     strpos($old2, '* @return') === 0    // 保留return行
                 ) {
-                    $keepLine .= $old;
+                    $keepLine .= strip_tags($old) . LINE;
+                } elseif (strpos($old2, '#[') === 0) {
+                    $keepLine2 .= LINE . strip_tags($old);
                 }
             }
         }
         if (!empty($keepLine)) {
-            $keepLine = LINE . $keepLine . LINE;
+            $keepLine = LINE . $keepLine;
         }
         $comment = file_get_contents($file);
-        $comment = '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . LINE;
+        $comment = '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
         return $comment;
     } else {
         return $oldComment;
