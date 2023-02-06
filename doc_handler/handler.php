@@ -6,12 +6,25 @@
  * Time: 17:28
  * 处理html
  */
-include('./simple_html_dom.php');
+include './simple_html_dom.php';
 
-const line = PHP_EOL;
-const site = 'https://www.php.net/manual/zh/';    // 外链站点 //也可设为本地衔接 例: file:///D:/Temp/php-chunked-xhtml/
-const in = __DIR__ . '/../raw/php-chunked-xhtml/';
-const temp = __DIR__ . '/../raw/temp/';
+const LINE = "\n";
+
+/**
+ * PHP文档外链
+ * 也可设为本地衔接 例: file:///D:/Temp/php-chunked-xhtml/
+ */
+const DOC_URL = 'https://www.php.net/manual/zh/';
+
+/**
+ * 文档手册
+ */
+const IN_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
+
+/**
+ *
+ */
+const TEMP_PATH = __DIR__ . '/../raw/temp/';
 
 
 function myPrint(...$args)
@@ -29,7 +42,7 @@ function myPrint(...$args)
  */
 function loadStr($name)
 {
-    $path = in . $name;
+    $path = IN_PATH . $name;
     $content = file_get_contents($path) or die("Unable to open file!");
     return $content;
 }
@@ -60,7 +73,7 @@ function modifyUrl($dom)
             $a->outertext = $href;
         } else {        // 如果未匹配到任何类型, 改成官网外链
             $href = str_replace('.html', '.php', $href);    // 网站外链为php 本地为html
-            $a->href = site . $href;
+            $a->href = DOC_URL . $href;
         }
     }
 }
@@ -188,15 +201,15 @@ function handleConst($file = 'filesystem.consts.html')
         if (strpos($outFile, '::')) {
             continue;
         }
-        echo $outFile . line;
-        file_put_contents(temp . '/' . $outFile, $html);
+        echo $outFile . LINE;
+        file_put_contents(TEMP_PATH . '/' . $outFile, $html);
     }
 }
 
 function getClass()
 {
     $clses = [];
-    if (@$handle = opendir(in)) {
+    if (@$handle = opendir(IN_PATH)) {
         while (($file = readdir($handle)) !== false) {
             $pre = 'class.';
             if ((substr($file, 0, strlen($pre)) === $pre)) {
@@ -224,20 +237,20 @@ function handle($file = 'function.date.html')
     $html = $dom->outertext;
     $html = modifyStr($html);
 
-    file_put_contents(temp . '/' . $file, $html);
-    echo $file . line;
+    file_put_contents(TEMP_PATH . '/' . $file, $html);
+    echo $file . LINE;
 }
 
 function handleAll()
 {
-    if (!is_dir(temp)) {
-        mkdir(temp);
+    if (!is_dir(TEMP_PATH)) {
+        mkdir(TEMP_PATH);
     }
     $clses = getClass();
     $clses['function'] = 1;
     $clses['class'] = 1;
     $clses['reserved'] = 1;
-    if (@$handle = opendir(in)) {
+    if (@$handle = opendir(IN_PATH)) {
         while (($file = readdir($handle)) !== false) {
             $tokens = explode('.', $file);
             $prefix = $tokens[0];

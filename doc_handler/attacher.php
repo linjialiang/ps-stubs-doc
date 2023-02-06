@@ -6,9 +6,9 @@
  * Time: 20:47
  */
 
-const docIn = __DIR__ . '/../raw/temp/';
-const docOut = __DIR__ . '/../raw/phpstorm-stubs-2022.3';
-const line = PHP_EOL;
+const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
+const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs-2022.3';
+const LINE = "\n";
 
 function myPrint(...$args)
 {
@@ -50,21 +50,26 @@ function getComment($token, $oldComment)
 {
     if (strpos($token, 'constant.') !== 0)  // 不是常量替换下划线
         $token = str_replace('_', '-', $token);
-    $file = docIn . $token . '.html';
-    $return = '';
+    $file = DOC_IN_PATH . $token . '.html';
     if (file_exists($file)) {
-        if ($oldComment) {  // 保留return行
+        $keepLine = '';
+        if ($oldComment) {
             $olds = explode("\n", $oldComment);
             foreach ($olds as $old) {
                 $old2 = trim($old);
-                if (strpos($old2, '* @return') === 0) {
-                    $return = $old;
-                    break;
+                if (
+                    strpos($old2, '* @param') === 0 ||  // 保留参数行
+                    strpos($old2, '* @return') === 0    // 保留return行
+                ) {
+                    $keepLine .= $old;
                 }
             }
         }
+        if (!empty($keepLine)) {
+            $keepLine = LINE . $keepLine . LINE;
+        }
         $comment = file_get_contents($file);
-        $comment = '/**' . line . '*' . $comment . line . $return . '*/' . line;
+        $comment = '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . LINE;
         return $comment;
     } else {
         return $oldComment;
@@ -124,7 +129,7 @@ function isVar($line)
 
 function handle($name)
 {
-    $file = docOut . $name;
+    $file = DOC_OUT_PATH . $name;
     $newContent = '';
     $handle = fopen($file, "r");// 以只读方式打开一个文件
     $comment = '';
@@ -169,18 +174,18 @@ function handle($name)
             $newContent .= $line;
         };
     }
-    file_put_contents(docOut . $name, $newContent);
+    file_put_contents(DOC_OUT_PATH . $name, $newContent);
 }
 
 function handleAll()
 {
     $files = [];
-    my_dir(docOut, '', $files);
+    my_dir(DOC_OUT_PATH, '', $files);
     foreach ($files as $file) {
         $suffix = substr(strrchr($file, '.'), 1);
         if ($suffix === 'php') {
             handle($file);
-            echo $file . line;
+            echo $file . LINE;
         }
     }
 }
