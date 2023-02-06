@@ -1,6 +1,6 @@
 ## 介绍
 
-摘抄至网络 https://github.com/fw6669998/php-doc/
+源码从 https://github.com/fw6669998/php-doc/ 拷贝，代码做过修复，以适合 `phpstorm-stubs-2023.2.3` 
 
 下面是文档具体制作过程：
 
@@ -97,17 +97,17 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    英文菜单栏操作：phpStorm -> project -> External Libraries -> 右键 -> Configure PHP Runtime -> Advanced Setting ->
    Default Stub Paths -> 选择刚刚的 `phpstorm-stubs-2022.3` 所在目录 -> 应用，确认 -> 等待加载IDE索引 -> 重启 IDE
 
-   ![image-20221212115821796](README.assets/image-20221212115821796.png)
+   ![image-20221212115821796](assets/image-20221212115821796.png)
 
-   ![image-20221212120046309](README.assets/image-20221212120046309.png)
+   ![image-20221212120046309](assets/image-20221212120046309.png)
 
 3. 排除 `symfony` 的扩展文件
 
    > 如果你的php版本已经是 `8.1+ ` 无需使用 `symfony` 的扩展文件，否则 `phpStorm` 无法识别该采用那个文档
 
-   ![image-20221212121502148](README.assets/image-20221212121502148.png)
+   ![image-20221212121502148](assets/image-20221212121502148.png)
 
-   ![image-20221212180147368](README.assets/image-20221212180147368.png)
+   ![image-20221212180147368](assets/image-20221212180147368.png)
 
 3. 检查
 
@@ -117,8 +117,8 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    array_is_list()
    ```
 
-   ![image-20221212120443182](README.assets/image-20221212120443182.png)
+   ![image-20221212120443182](assets/image-20221212120443182.png)
 
-   ![image-20221212121235536](README.assets/image-20221212121235536.png)
+   ![image-20221212121235536](assets/image-20221212121235536.png)
    
    

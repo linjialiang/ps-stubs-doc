@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: fw
- * Date: 2018/12/21
- * Time: 20:47
- */
 
 const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
 const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs-2022.3';

@@ -1,11 +1,9 @@
 <?php
+
 /**
- * Created by PhpStorm.
- * User: f
- * Date: 2018/12/20
- * Time: 17:28
- * 处理html
+ * 处理 HTML
  */
+
 include './simple_html_dom.php';
 
 const LINE = "\n";
