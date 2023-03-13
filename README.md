@@ -26,7 +26,7 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
 
    ```shell
    # 1. 进入项目根目录
-   cd ~/git/php-doc/raw/
+   cd /server/www/php-doc/raw/
    # 2.1 移动 php 文档
    mv path/php_manual_zh.tar.gz ./
    # 2.2 移动 phpStorm 文档
@@ -59,11 +59,11 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
 
    ```shell
    # 1. 进入文档处理程序目录
-   cd ~/git/php-doc/doc_handler/
+   cd /server/www/php-doc/doc_handler/
    # 2. 处理 php文档文件
-   php handler.php
+   /server/php/74/bin/php handler.php
    # 3. 处理 phpstorm文档文件 
-   php attacher.php
+   /server/php/74/bin/php attacher.php
    ```
 
 4. 删除多于的文件
@@ -71,9 +71,10 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    ```shell
    # phpstorm-stubs-2022.3/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
    # 查看目录下，把 非目录的文件 删除即可
-   cd ~/git/php-doc/raw/phpstorm-stubs-2022.3/
+   cd /server/www/php-doc/raw/phpstorm-stubs-2022.3/
    # Linux
-   ls --file-type | grep -v /$ | xargs rm -f
+   ls -a --file-type | grep -v /$ | xargs rm -f
+   rm -rf .github/ .idea/
    ```
 
 ## 5. 文档引入phpstorm
