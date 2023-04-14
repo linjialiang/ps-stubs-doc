@@ -76,6 +76,9 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    # Linux
    ls -a --file-type | grep -v /$ | xargs rm -f
    rm -rf .github/ .idea/
+   cd ../
+   mv phpstorm-stubs/ phpstorm-stubs-zh/
+   tar -cJf phpstorm-stubs-zh.tar.xz phpstorm-stubs-zh/
    ```
 
 ## 5. 文档引入phpstorm
