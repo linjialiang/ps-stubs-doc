@@ -35,12 +35,13 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    tar -xzf php_manual_zh.tar.gz
    mv ./php_manual_zh/php-chunked-xhtml ./php-chunked-xhtml
    tar -xzf phpstorm-stubs-2022.3.tar.gz
+   mv phpstorm-stubs-2022.3/ phpstorm-stubs/
    ```
 
    > 解压得到文件夹：
 
    ```text
-   phpstorm-stubs-2022.3    -- phpstorm-stubs文档
+   phpstorm-stubs           -- phpstorm-stubs文档
    php-chunked-xhtml        -- php官方文档
    ```
 
@@ -48,7 +49,7 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
 
    ```php
    # doc_handler/attacher.php 中常用 docOut 改成phpstorm对应版本文档的路径
-   const docOut = __DIR__ . '/../raw/phpstorm-stubs-2022.3/';
+   const docOut = __DIR__ . '/../raw/phpstorm-stubs/';
    ```
 
 3. 进行文档处理
@@ -69,9 +70,9 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
 4. 删除多于的文件
 
    ```shell
-   # phpstorm-stubs-2022.3/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
+   # phpstorm-stubs/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
    # 查看目录下，把 非目录的文件 删除即可
-   cd /server/www/php-doc/raw/phpstorm-stubs-2022.3/
+   cd /server/www/php-doc/raw/phpstorm-stubs/
    # Linux
    ls -a --file-type | grep -v /$ | xargs rm -f
    rm -rf .github/ .idea/
@@ -79,24 +80,24 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
 
 ## 5. 文档引入phpstorm
 
-经过处理的文档目录 `phpstorm-stubs-2022.3` 已经是 `ok` 的 PhpStorm中文文档，但是还需要安装进去 `PhpStorm`
+经过处理的文档目录 `phpstorm-stubs` 已经是 `ok` 的 PhpStorm中文文档，但是还需要安装进去 `PhpStorm`
 
 > ⚠️警告：如果你的 PhpStorm 已经安装中文文档插件 `chinese php document` ，则需要先卸载，然后重启 `PhpStorm`
 
 1. 保存文档目录
 
-   注意：最好把 `phpstorm-stubs-2022.3/` 移至一个可保存不变动的目录，并且目录必须保持全英文路径，避免不必要的麻烦**
+   注意：最好把 `phpstorm-stubs/` 移至一个可保存不变动的目录，并且目录必须保持全英文路径，避免不必要的麻烦**
 
 2. 设置引入目录
 
    重启启动 `IDE`
 
    中文菜单栏操作：phpStorm -> 右边项目菜单栏，选中 外部库 -> 右键 -> 配置 PHP Include 路径 -> 选中 PHP 运行时 ->
-   选择底部高级设置 ->  设置默认存根路径，选择刚刚的 `phpstorm-stubs-2022.3` 所在目录 -> 应用，确认 -> 等待加载IDE索引 ->
+   选择底部高级设置 ->  设置默认存根路径，选择刚刚的 `phpstorm-stubs` 所在目录 -> 应用，确认 -> 等待加载IDE索引 ->
    重启 IDE
 
    英文菜单栏操作：phpStorm -> project -> External Libraries -> 右键 -> Configure PHP Runtime -> Advanced Setting ->
-   Default Stub Paths -> 选择刚刚的 `phpstorm-stubs-2022.3` 所在目录 -> 应用，确认 -> 等待加载IDE索引 -> 重启 IDE
+   Default Stub Paths -> 选择刚刚的 `phpstorm-stubs` 所在目录 -> 应用，确认 -> 等待加载IDE索引 -> 重启 IDE
 
    ![image-20221212115821796](assets/image-20221212115821796.png)
 

@@ -1,7 +1,7 @@
 <?php
 
 const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
-const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs-2022.3';
+const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 const LINE = "\n";
 
 function myPrint(...$args)
