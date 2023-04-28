@@ -1,18 +1,5 @@
 <?php
 // +----------------------------------------------------------------------
-// | php-doc [ PHP is the best language for web programming ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2022-2023 linjialiang All rights reserved.
-// +----------------------------------------------------------------------
-// | Author: linjialiang <linjialiang@163.com>
-// +----------------------------------------------------------------------
-// | CreateTime: 2023-04-28 09:40:37
-// +----------------------------------------------------------------------
-
-trait Common
-{
-
-// +----------------------------------------------------------------------
 // | 下面类的所有常量定义
 // +----------------------------------------------------------------------
 const HDOM_TYPE_ELEMENT = 1;
@@ -25,7 +12,7 @@ const HDOM_QUOTE_DOUBLE = 0;
 const HDOM_QUOTE_SINGLE = 1;
 const HDOM_QUOTE_NO = 3;
 const HDOM_INFO_BEGIN = 0;
-protected const HDOM_INFO_END = 1;
+const HDOM_INFO_END = 1;
 const HDOM_INFO_QUOTE = 2;
 const HDOM_INFO_SPACE = 3;
 const HDOM_INFO_TEXT = 4;
@@ -40,4 +27,3 @@ const MAX_FILE_SIZE = 600000;
  * 大括号 `{` 和 `}` 之间的内容被解释为文本
  */
 const HDOM_SMARTY_AS_TEXT = 1;
-}

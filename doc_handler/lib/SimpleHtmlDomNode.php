@@ -12,10 +12,8 @@
 
 include __DIR__ . '/Common.php';
 
-class SimpleHtmlDomNode
+class SimpleHtmlDomNode extends \SimpleHtmlDom
 {
-    use Common;
-
     /**
      * Node type
      *
@@ -23,7 +21,7 @@ class SimpleHtmlDomNode
      *
      * @var int
      */
-    public int $nodetype = self::HDOM_TYPE_TEXT;
+    public int $nodetype = HDOM_TYPE_TEXT;
 
     /**
      * Tag name
@@ -65,6 +63,10 @@ class SimpleHtmlDomNode
      * @var int
      */
     public int $tag_start = 0;
+    /**
+     * @var bool|mixed|string|void
+     */
+    public $outertext;
 
     /**
      * The DOM object
@@ -158,8 +160,8 @@ class SimpleHtmlDomNode
         }
 
         $string .= " HDOM_INNER_INFO: '";
-        if (isset($node->_[self::HDOM_INFO_INNER])) {
-            $string .= $node->_[self::HDOM_INFO_INNER] . "'";
+        if (isset($node->_[HDOM_INFO_INNER])) {
+            $string .= $node->_[HDOM_INFO_INNER] . "'";
         } else {
             $string .= ' NULL ';
         }
@@ -337,8 +339,8 @@ class SimpleHtmlDomNode
      */
     function innertext(): string
     {
-        if (isset($this->_[self::HDOM_INFO_INNER])) return $this->_[self::HDOM_INFO_INNER];
-        if (isset($this->_[self::HDOM_INFO_TEXT])) return $this->dom->restore_noise($this->_[self::HDOM_INFO_TEXT]);
+        if (isset($this->_[HDOM_INFO_INNER])) return $this->_[HDOM_INFO_INNER];
+        if (isset($this->_[HDOM_INFO_TEXT])) return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
 
         $ret = '';
         foreach ($this->nodes as $n)
@@ -371,21 +373,21 @@ class SimpleHtmlDomNode
             call_user_func_array($this->dom->callback, array($this));
         }
 
-        if (isset($this->_[self::HDOM_INFO_OUTER])) return $this->_[self::HDOM_INFO_OUTER];
-        if (isset($this->_[self::HDOM_INFO_TEXT])) return $this->dom->restore_noise($this->_[self::HDOM_INFO_TEXT]);
+        if (isset($this->_[HDOM_INFO_OUTER])) return $this->_[HDOM_INFO_OUTER];
+        if (isset($this->_[HDOM_INFO_TEXT])) return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
 
         // render begin tag
-        if ($this->dom && $this->dom->nodes[$this->_[self::HDOM_INFO_BEGIN]]) {
-            $ret = $this->dom->nodes[$this->_[self::HDOM_INFO_BEGIN]]->makeup();
+        if ($this->dom && $this->dom->nodes[$this->_[HDOM_INFO_BEGIN]]) {
+            $ret = $this->dom->nodes[$this->_[HDOM_INFO_BEGIN]]->makeup();
         } else {
             $ret = "";
         }
 
         // render inner text
-        if (isset($this->_[self::HDOM_INFO_INNER])) {
+        if (isset($this->_[HDOM_INFO_INNER])) {
             // If it's a br tag...  don't return the HDOM_INNER_INFO that we may or may not have added.
             if ($this->tag != "br") {
-                $ret .= $this->_[self::HDOM_INFO_INNER];
+                $ret .= $this->_[HDOM_INFO_INNER];
             }
         } else {
             if ($this->nodes) {
@@ -396,7 +398,7 @@ class SimpleHtmlDomNode
         }
 
         // render end tag
-        if (isset($this->_[self::HDOM_INFO_END]) && $this->_[self::HDOM_INFO_END] != 0)
+        if (isset($this->_[HDOM_INFO_END]) && $this->_[HDOM_INFO_END] != 0)
             $ret .= '</' . $this->tag . '>';
         return $ret;
     }
@@ -408,12 +410,12 @@ class SimpleHtmlDomNode
      */
     function text(): string
     {
-        if (isset($this->_[self::HDOM_INFO_INNER])) return $this->_[self::HDOM_INFO_INNER];
+        if (isset($this->_[HDOM_INFO_INNER])) return $this->_[HDOM_INFO_INNER];
         switch ($this->nodetype) {
-            case self::HDOM_TYPE_TEXT:
-                return $this->dom->restore_noise($this->_[self::HDOM_INFO_TEXT]);
-            case self::HDOM_TYPE_UNKNOWN:
-            case self::HDOM_TYPE_COMMENT:
+            case HDOM_TYPE_TEXT:
+                return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
+            case HDOM_TYPE_UNKNOWN:
+            case HDOM_TYPE_COMMENT:
                 return '';
         }
         if (strcasecmp($this->tag, 'script') === 0) return '';
@@ -457,7 +459,7 @@ class SimpleHtmlDomNode
     function makeup()
     {
         // text, comment, unknown
-        if (isset($this->_[self::HDOM_INFO_TEXT])) return $this->dom->restore_noise($this->_[self::HDOM_INFO_TEXT]);
+        if (isset($this->_[HDOM_INFO_TEXT])) return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
 
         $ret = '<' . $this->tag;
         $i = -1;
@@ -469,21 +471,21 @@ class SimpleHtmlDomNode
             if ($val === null || $val === false)
                 continue;
 
-            $ret .= $this->_[self::HDOM_INFO_SPACE][$i][0];
+            $ret .= $this->_[HDOM_INFO_SPACE][$i][0];
             //no value attr: nowrap, checked selected...
             if ($val === true)
                 $ret .= $key;
             else {
-                $quote = match ($this->_[self::HDOM_INFO_QUOTE][$i]) {
-                    self::HDOM_QUOTE_DOUBLE => '"',
-                    self::HDOM_QUOTE_SINGLE => '\'',
+                $quote = match ($this->_[HDOM_INFO_QUOTE][$i]) {
+                    HDOM_QUOTE_DOUBLE => '"',
+                    HDOM_QUOTE_SINGLE => '\'',
                     default => '',
                 };
-                $ret .= $key . $this->_[self::HDOM_INFO_SPACE][$i][1] . '=' . $this->_[self::HDOM_INFO_SPACE][$i][2] . $quote . $val . $quote;
+                $ret .= $key . $this->_[HDOM_INFO_SPACE][$i][1] . '=' . $this->_[HDOM_INFO_SPACE][$i][2] . $quote . $val . $quote;
             }
         }
         $ret = $this->dom->restore_noise($ret);
-        return $ret . $this->_[self::HDOM_INFO_ENDSPACE] . '>';
+        return $ret . $this->_[HDOM_INFO_ENDSPACE] . '>';
     }
 
     // find elements by css selector
@@ -499,9 +501,9 @@ class SimpleHtmlDomNode
             // The change on the below line was documented on the sourceforge code tracker id 2788009
             // used to be: if (($levle=count($selectors[0]))===0) return array();
             if (($levle = count($selectors[$c])) === 0) return array();
-            if (!isset($this->_[self::HDOM_INFO_BEGIN])) return array();
+            if (!isset($this->_[HDOM_INFO_BEGIN])) return array();
 
-            $head = array($this->_[self::HDOM_INFO_BEGIN] => 1);
+            $head = array($this->_[HDOM_INFO_BEGIN] => 1);
 
             // handle descendant selectors, no recursive!
             for ($l = 0; $l < $levle; ++$l) {
@@ -551,7 +553,7 @@ class SimpleHtmlDomNode
             foreach ($this->children as $c) {
                 if ($tag === '*' || $tag === $c->tag) {
                     if (++$count == $key) {
-                        $ret[$c->_[self::HDOM_INFO_BEGIN]] = 1;
+                        $ret[$c->_[HDOM_INFO_BEGIN]] = 1;
                         return;
                     }
                 }
@@ -559,17 +561,17 @@ class SimpleHtmlDomNode
             return;
         }
 
-        $end = (!empty($this->_[self::HDOM_INFO_END])) ? $this->_[self::HDOM_INFO_END] : 0;
+        $end = (!empty($this->_[HDOM_INFO_END])) ? $this->_[HDOM_INFO_END] : 0;
         if ($end == 0) {
             $parent = $this->parent;
-            while (!isset($parent->_[self::HDOM_INFO_END]) && $parent !== null) {
+            while (!isset($parent->_[HDOM_INFO_END]) && $parent !== null) {
                 $end -= 1;
                 $parent = $parent->parent;
             }
-            $end += $parent->_[self::HDOM_INFO_END];
+            $end += $parent->_[HDOM_INFO_END];
         }
 
-        for ($i = $this->_[self::HDOM_INFO_BEGIN] + 1; $i < $end; ++$i) {
+        for ($i = $this->_[HDOM_INFO_BEGIN] + 1; $i < $end; ++$i) {
             $node = $this->dom->nodes[$i];
 
             $pass = true;
@@ -765,14 +767,14 @@ class SimpleHtmlDomNode
 
         switch ($name) {
             case 'outertext':
-                return $this->_[self::HDOM_INFO_OUTER] = $value;
+                return $this->_[HDOM_INFO_OUTER] = $value;
             case 'innertext':
-                if (isset($this->_[self::HDOM_INFO_TEXT])) return $this->_[self::HDOM_INFO_TEXT] = $value;
-                return $this->_[self::HDOM_INFO_INNER] = $value;
+                if (isset($this->_[HDOM_INFO_TEXT])) return $this->_[HDOM_INFO_TEXT] = $value;
+                return $this->_[HDOM_INFO_INNER] = $value;
         }
         if (!isset($this->attr[$name])) {
-            $this->_[self::HDOM_INFO_SPACE][] = array(' ', '', '');
-            $this->_[self::HDOM_INFO_QUOTE][] = self::HDOM_QUOTE_DOUBLE;
+            $this->_[HDOM_INFO_SPACE][] = array(' ', '', '');
+            $this->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_DOUBLE;
         }
         $this->attr[$name] = $value;
     }

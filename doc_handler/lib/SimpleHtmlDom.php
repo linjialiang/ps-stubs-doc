@@ -16,8 +16,6 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
 
 #[AllowDynamicProperties] class SimpleHtmlDom
 {
-    use Common;
-
     /**
      * The root node of the document
      *
@@ -273,7 +271,17 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         'tr' => ['td' => 1, 'th' => 1, 'tr' => 1],
     ];
 
-    function __construct($str = null, $lowercase = true, $forceTagsClosed = true, $target_charset = self::DEFAULT_TARGET_CHARSET, $stripRN = true, $defaultBRText = self::DEFAULT_BR_TEXT, $defaultSpanText = self::DEFAULT_SPAN_TEXT, $options = 0)
+    /**
+     * @param $str
+     * @param bool $lowercase
+     * @param bool $forceTagsClosed
+     * @param string $target_charset
+     * @param bool $stripRN
+     * @param string $defaultBRText
+     * @param string $defaultSpanText
+     * @param int $options
+     */
+    public function __construct($str = null, bool $lowercase = true, bool $forceTagsClosed = true, string $target_charset = DEFAULT_TARGET_CHARSET, bool $stripRN = true, string $defaultBRText = DEFAULT_BR_TEXT, string $defaultSpanText = DEFAULT_SPAN_TEXT, int $options = 0)
     {
         if ($str) {
             if (preg_match("/^http:\/\//i", $str) || is_file($str)) {
@@ -294,8 +302,17 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         $this->clear();
     }
 
-    // load html from string
-    function load($str, $lowercase = true, $stripRN = true, $defaultBRText = self::DEFAULT_BR_TEXT, $defaultSpanText = self::DEFAULT_SPAN_TEXT, $options = 0): static
+    /**
+     * load html from string
+     * @param string $str
+     * @param bool $lowercase
+     * @param bool $stripRN
+     * @param string $defaultBRText
+     * @param string $defaultSpanText
+     * @param int $options
+     * @return $this
+     */
+    function load(string $str, bool $lowercase = true, bool $stripRN = true, string $defaultBRText = DEFAULT_BR_TEXT, string $defaultSpanText = DEFAULT_SPAN_TEXT, int $options = 0): static
     {
         global $debug_object;
 
@@ -329,14 +346,14 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         // strip out server side scripts
         $this->remove_noise("'(<\?)(.*?)(\?>)'s", true);
 
-        if ($options & self::HDOM_SMARTY_AS_TEXT) { // Strip Smarty scripts
+        if ($options & HDOM_SMARTY_AS_TEXT) { // Strip Smarty scripts
             $this->remove_noise("'(\{\w)(.*?)(})'s", true);
         }
 
         // parsing
         $this->parse();
         // end
-        $this->root->_[self::HDOM_INFO_END] = $this->cursor;
+        $this->root->_[HDOM_INFO_END] = $this->cursor;
         $this->parse_charset();
 
         // make load function chainable
@@ -348,8 +365,8 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
     function load_file()
     {
         $args = func_get_args();
-
-        if ($doc = call_user_func_array('file_get_contents', $args) !== false) {
+        $doc = call_user_func_array('file_get_contents', $args);
+        if ($doc !== false) {
             $this->load($doc, true);
         } else {
             return false;
@@ -429,7 +446,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
     }
 
     // prepare HTML data and init everything
-    protected function prepare($str, $lowercase = true, $defaultBRText = self::DEFAULT_BR_TEXT, $defaultSpanText = self::DEFAULT_SPAN_TEXT): void
+    protected function prepare($str, $lowercase = true, $defaultBRText = DEFAULT_BR_TEXT, $defaultSpanText = DEFAULT_SPAN_TEXT): void
     {
         $this->clear();
 
@@ -445,8 +462,8 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         $this->default_span_text = $defaultSpanText;
         $this->root = new SimpleHtmlDomNode($this);
         $this->root->tag = 'root';
-        $this->root->_[self::HDOM_INFO_BEGIN] = -1;
-        $this->root->nodetype = self::HDOM_TYPE_ROOT;
+        $this->root->_[HDOM_INFO_BEGIN] = -1;
+        $this->root->nodetype = HDOM_TYPE_ROOT;
         $this->parent = $this->root;
         if ($this->size > 0) $this->char = $this->doc[0];
     }
@@ -472,7 +489,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
             // Add a text node for text between tags
             $node = new SimpleHtmlDomNode($this);
             ++$this->cursor;
-            $node->_[self::HDOM_INFO_TEXT] = $s;
+            $node->_[HDOM_INFO_TEXT] = $s;
             $this->link_nodes($node, false);
         }
     }
@@ -566,7 +583,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
     {
         // Set end position if no further tags found
         if ($this->char !== '<') {
-            $this->root->_[self::HDOM_INFO_END] = $this->cursor;
+            $this->root->_[HDOM_INFO_END] = $this->cursor;
             return false;
         }
         $begin_tag_pos = $this->pos;
@@ -593,7 +610,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
                 // Parent tag does not have to be closed necessarily (optional closing tag)
                 // Current tag is a block tag, so it may close an ancestor
                 if (isset($this->optional_closing_tags[$parent_lower]) && isset($this->block_tags[$tag_lower])) {
-                    $this->parent->_[self::HDOM_INFO_END] = 0;
+                    $this->parent->_[HDOM_INFO_END] = 0;
                     $org_parent = $this->parent;
 
                     // Traverse ancestors to find a matching opening tag
@@ -605,12 +622,12 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
                     if (strtolower($this->parent->tag) !== $tag_lower) {
                         $this->parent = $org_parent; // restore origonal parent
                         if ($this->parent->parent) $this->parent = $this->parent->parent;
-                        $this->parent->_[self::HDOM_INFO_END] = $this->cursor;
+                        $this->parent->_[HDOM_INFO_END] = $this->cursor;
                         return $this->as_text_node($tag);
                     }
                 } // Grandparent exists and current tag is a block tag, so our parent doesn't have an end tag
                 else if (($this->parent->parent) && isset($this->block_tags[$tag_lower])) {
-                    $this->parent->_[self::HDOM_INFO_END] = 0; // No end tag
+                    $this->parent->_[HDOM_INFO_END] = 0; // No end tag
                     $org_parent = $this->parent;
 
                     // Traverse ancestors to find a matching opening tag
@@ -621,19 +638,19 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
                     // If we don't have a match add current tag as text node
                     if (strtolower($this->parent->tag) !== $tag_lower) {
                         $this->parent = $org_parent; // restore origonal parent
-                        $this->parent->_[self::HDOM_INFO_END] = $this->cursor;
+                        $this->parent->_[HDOM_INFO_END] = $this->cursor;
                         return $this->as_text_node($tag);
                     }
                 } // Grandparent exists and current tag closes it
                 else if (($this->parent->parent) && strtolower($this->parent->parent->tag) === $tag_lower) {
-                    $this->parent->_[self::HDOM_INFO_END] = 0;
+                    $this->parent->_[HDOM_INFO_END] = 0;
                     $this->parent = $this->parent->parent;
                 } else // Random tag, add as text node
                     return $this->as_text_node($tag);
             }
 
             // Set end position of parent tag to current cursor position
-            $this->parent->_[self::HDOM_INFO_END] = $this->cursor;
+            $this->parent->_[HDOM_INFO_END] = $this->cursor;
             if ($this->parent->parent) $this->parent = $this->parent->parent;
 
             $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
@@ -642,7 +659,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
 
         // start tag
         $node = new SimpleHtmlDomNode($this);
-        $node->_[self::HDOM_INFO_BEGIN] = $this->cursor;
+        $node->_[HDOM_INFO_BEGIN] = $this->cursor;
         ++$this->cursor;
         $tag = $this->copy_until($this->token_slash); // Get tag name
         $node->tag_start = $begin_tag_pos;
@@ -652,16 +669,16 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         // <![CDATA[ ... ]]>
         // <!-- Comment -->
         if (isset($tag[0]) && $tag[0] === '!') {
-            $node->_[self::HDOM_INFO_TEXT] = '<' . $tag . $this->copy_until_char('>');
+            $node->_[HDOM_INFO_TEXT] = '<' . $tag . $this->copy_until_char('>');
 
             if (isset($tag[2]) && $tag[1] === '-' && $tag[2] === '-') { // Comment ("<!--")
-                $node->nodetype = self::HDOM_TYPE_COMMENT;
+                $node->nodetype = HDOM_TYPE_COMMENT;
                 $node->tag = 'comment';
             } else { // Could be doctype or CDATA but we don't care
-                $node->nodetype = self::HDOM_TYPE_UNKNOWN;
+                $node->nodetype = HDOM_TYPE_UNKNOWN;
                 $node->tag = 'unknown';
             }
-            if ($this->char === '>') $node->_[self::HDOM_INFO_TEXT] .= '>';
+            if ($this->char === '>') $node->_[HDOM_INFO_TEXT] .= '>';
             $this->link_nodes($node, true);
             $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
             return true;
@@ -671,7 +688,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         // i.e. "<<html>"
         if ($pos = str_contains($tag, '<')) {
             $tag = '<' . substr($tag, 0, -1);
-            $node->_[self::HDOM_INFO_TEXT] = $tag;
+            $node->_[HDOM_INFO_TEXT] = $tag;
             $this->link_nodes($node, false);
             $this->char = $this->doc[--$this->pos]; // prev
             return true;
@@ -679,7 +696,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
 
         // Handle invalid tag names (i.e. "<html#doc>")
         if (!preg_match("/^\w[\w:-]*$/", $tag)) {
-            $node->_[self::HDOM_INFO_TEXT] = '<' . $tag . $this->copy_until('<>');
+            $node->_[HDOM_INFO_TEXT] = '<' . $tag . $this->copy_until('<>');
 
             // Next char is the beginning of a new tag, don't touch it.
             if ($this->char === '<') {
@@ -688,14 +705,14 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
             }
 
             // Next char closes current tag, add and be done with it.
-            if ($this->char === '>') $node->_[self::HDOM_INFO_TEXT] .= '>';
+            if ($this->char === '>') $node->_[HDOM_INFO_TEXT] .= '>';
             $this->link_nodes($node, false);
             $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
             return true;
         }
 
         // begin tag, add new node
-        $node->nodetype = self::HDOM_TYPE_ELEMENT;
+        $node->nodetype = HDOM_TYPE_ELEMENT;
         $tag_lower = strtolower($tag);
         $node->tag = ($this->lowercase) ? $tag_lower : $tag;
 
@@ -703,7 +720,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         if (isset($this->optional_closing_tags[$tag_lower])) {
             // Traverse ancestors to close all optional closing tags
             while (isset($this->optional_closing_tags[$tag_lower][strtolower($this->parent->tag)])) {
-                $this->parent->_[self::HDOM_INFO_END] = 0;
+                $this->parent->_[HDOM_INFO_END] = 0;
                 $this->parent = $this->parent->parent;
             }
             $node->parent = $this->parent;
@@ -730,9 +747,9 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
 
             // handle endless '<'
             if ($this->pos >= $this->size - 1 && $this->char !== '>') { // Out of bounds before the tag ended
-                $node->nodetype = self::HDOM_TYPE_TEXT;
-                $node->_[self::HDOM_INFO_END] = 0;
-                $node->_[self::HDOM_INFO_TEXT] = '<' . $tag . $space[0] . $name;
+                $node->nodetype = HDOM_TYPE_TEXT;
+                $node->_[HDOM_INFO_END] = 0;
+                $node->_[HDOM_INFO_TEXT] = '<' . $tag . $space[0] . $name;
                 $node->tag = 'text';
                 $this->link_nodes($node, false);
                 return true;
@@ -740,11 +757,11 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
 
             // handle mismatch '<'
             if ($this->doc[$this->pos - 1] == '<') { // Attributes cannot start after opening tag
-                $node->nodetype = self::HDOM_TYPE_TEXT;
+                $node->nodetype = HDOM_TYPE_TEXT;
                 $node->tag = 'text';
                 $node->attr = array();
-                $node->_[self::HDOM_INFO_END] = 0;
-                $node->_[self::HDOM_INFO_TEXT] = substr($this->doc, $begin_tag_pos, $this->pos - $begin_tag_pos - 1);
+                $node->_[HDOM_INFO_END] = 0;
+                $node->_[HDOM_INFO_TEXT] = substr($this->doc, $begin_tag_pos, $this->pos - $begin_tag_pos - 1);
                 $this->pos -= 2;
                 $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
                 $this->link_nodes($node, false);
@@ -760,23 +777,23 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
                     $this->parse_attr($node, $name, $space); // get attribute value
                 } else {
                     //no value attr: nowrap, checked selected...
-                    $node->_[self::HDOM_INFO_QUOTE][] = self::HDOM_QUOTE_NO;
+                    $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_NO;
                     $node->attr[$name] = true;
                     if ($this->char != '>') $this->char = $this->doc[--$this->pos]; // prev
                 }
-                $node->_[self::HDOM_INFO_SPACE][] = $space;
+                $node->_[HDOM_INFO_SPACE][] = $space;
                 $space = array($this->copy_skip($this->token_blank), '', ''); // prepare for next attribute
             } else // no more attributes
                 break;
         } while ($this->char !== '>' && $this->char !== '/'); // go until the tag ended
 
         $this->link_nodes($node, true);
-        $node->_[self::HDOM_INFO_ENDSPACE] = $space[0];
+        $node->_[HDOM_INFO_ENDSPACE] = $space[0];
 
         // handle empty tags (i.e. "<div/>")
         if ($this->copy_until_char('>') === '/') {
-            $node->_[self::HDOM_INFO_ENDSPACE] .= '/';
-            $node->_[self::HDOM_INFO_END] = 0;
+            $node->_[HDOM_INFO_ENDSPACE] .= '/';
+            $node->_[HDOM_INFO_END] = 0;
         } else {
             // reset parent
             if (!isset($this->self_closing_tags[strtolower($node->tag)])) $this->parent = $node;
@@ -787,7 +804,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         // This way when we see it in plaintext, we can generate formatting that the user wants.
         // since a br tag never has sub nodes, this works well.
         if ($node->tag == "br") {
-            $node->_[self::HDOM_INFO_INNER] = $this->default_br_text;
+            $node->_[HDOM_INFO_INNER] = $this->default_br_text;
         }
 
         return true;
@@ -813,19 +830,19 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
         $space[2] = $this->copy_skip($this->token_blank); // [2] Whitespace between "=" and the value
         switch ($this->char) {
             case '"': // value is anything between double quotes
-                $node->_[self::HDOM_INFO_QUOTE][] = self::HDOM_QUOTE_DOUBLE;
+                $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_DOUBLE;
                 $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
                 $node->attr[$name] = $this->restore_noise($this->copy_until_char('"'));
                 $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
                 break;
             case '\'': // value is anything between single quotes
-                $node->_[self::HDOM_INFO_QUOTE][] = self::HDOM_QUOTE_SINGLE;
+                $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_SINGLE;
                 $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
                 $node->attr[$name] = $this->restore_noise($this->copy_until_char('\''));
                 $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
                 break;
             default: // value is anything until the first space or end tag
-                $node->_[self::HDOM_INFO_QUOTE][] = self::HDOM_QUOTE_NO;
+                $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_NO;
                 $node->attr[$name] = $this->restore_noise($this->copy_until($this->token_attr));
         }
         // PaperG: Attributes should not have \r or \n in them, that counts as html whitespace.
@@ -864,7 +881,7 @@ include __DIR__ . '/SimpleHtmlDomNode.php';
     {
         $node = new SimpleHtmlDomNode($this);
         ++$this->cursor;
-        $node->_[self::HDOM_INFO_TEXT] = '</' . $tag . '>';
+        $node->_[HDOM_INFO_TEXT] = '</' . $tag . '>';
         $this->link_nodes($node, false);
         $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
         return true;

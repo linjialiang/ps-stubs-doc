@@ -4,7 +4,7 @@
  * 处理 HTML
  */
 
-include './simple_html_dom.php';
+include __DIR__ . '/lib/SimpleHtmlDom.php';
 
 const LINE = "\n";
 
@@ -20,12 +20,12 @@ const DOC_URL = 'https://www.php.net/manual/zh/';
 const IN_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
 
 /**
- *
+ * 处理后的文件路径
  */
 const TEMP_PATH = __DIR__ . '/../raw/temp/';
 
 
-function myPrint(...$args)
+function myPrint(...$args): void
 {
     foreach ($args as $arg) {
         print_r($arg);
@@ -34,22 +34,10 @@ function myPrint(...$args)
 }
 
 /**
- * 加载文本内容
- * @param $name
- * @return bool|string
- */
-function loadStr($name): bool|string
-{
-    $path = IN_PATH . $name;
-    $content = file_get_contents($path) or die("Unable to open file!");
-    return $content;
-}
-
-/**
  * 修改衔接
- * @param simple_html_dom $dom
+ * @param SimpleHtmlDom $dom
  */
-function modifyUrl(simple_html_dom $dom): void
+function modifyUrl(SimpleHtmlDom $dom): void
 {
     $links = $dom->find('a');
     foreach ($links as $iValue) {
@@ -74,21 +62,6 @@ function modifyUrl(simple_html_dom $dom): void
             $a->href = DOC_URL . $href;
         }
     }
-}
-
-/**
- * 修改文本
- */
-function modifyStr($html): array|string
-{
-    // 防止注释异常终止
-    $html = str_replace('/*', '//', $html);
-    $html = str_replace('*/', '', $html);
-    // 重设代码颜色以便在黑色主题下查看
-    $html = str_replace('#0000BB', '#9876AA', $html);
-    // 清理换行
-    $html = str_replace("\r", '', $html);
-    return str_replace("\n", '', $html);
 }
 
 function modifyAttr($dom, $selector, $value, $attr = 'style'): void
@@ -127,7 +100,56 @@ function modifyOutput($dom): void
     }
 }
 
-function handleStyle($dom)
+/**
+ * 修改文本
+ */
+function modifyStr($html): array|string
+{
+    // 防止注释异常终止
+    $html = str_replace('/*', '//', $html);
+    $html = str_replace('*/', '', $html);
+    // 重设代码颜色以便在黑色主题下查看
+    $html = str_replace('#0000BB', '#9876AA', $html);
+    // 清理换行
+    $html = str_replace("\r", '', $html);
+    return str_replace("\n", '', $html);
+}
+
+/**
+ * 第7步 处理常量
+ * @param string $file
+ * @return void
+ */
+function handleConst(string $file = 'filesystem.consts.html'): void
+{
+    $content = loadStr($file);
+    $selector = str_get_html($content);
+    $doms = $selector->find('strong code');
+    foreach ($doms as $dom) {
+        if (!$dom) continue;
+        $outFile = 'constant.' . $dom->innertext . '.html';
+        $parent = $dom->parentNode()->parentNode();
+        $next = $parent->nextSibling();
+        if (!$next) continue;
+        $next = $next->children(0);
+        if (!$next) continue;
+        modifyUrl($next);
+        $html = $next->innertext;
+        if (!$html) continue;
+        if (trim($html) == '') continue;
+        $html = modifyStr($html);
+        if (strpos($outFile, '::')) continue;
+        echo $outFile . LINE;
+        file_put_contents(TEMP_PATH . '/' . $outFile, $html);
+    }
+}
+
+/**
+ * 第6步
+ * @param $dom
+ * @return mixed
+ */
+function handleStyle($dom): mixed
 {
     // 方法颜色
     modifyAttr($dom, '.methodname', 'color:#CC7832');
@@ -166,59 +188,42 @@ function handleStyle($dom)
     return $dom;
 }
 
-function handleConst($file = 'filesystem.consts.html'): void
+/**
+ * 第5步 从字符串中获取 html dom
+ * @param $str
+ * @param true $lowercase
+ * @param true $forceTagsClosed
+ * @param string $target_charset
+ * @param bool $stripRN
+ * @param string $defaultBRText
+ * @param string $defaultSpanText
+ * @return SimpleHtmlDom|false
+ */
+function str_get_html($str, true $lowercase = true, true $forceTagsClosed = true, string $target_charset = DEFAULT_TARGET_CHARSET, bool $stripRN = true, string $defaultBRText = DEFAULT_BR_TEXT, string $defaultSpanText = DEFAULT_SPAN_TEXT): SimpleHtmlDom|false
 {
-    $content = loadStr($file);
-    $selector = str_get_html($content);
-
-    $doms = $selector->find('strong code');
-    foreach ($doms as $dom) {
-        if (!$dom) {
-            continue;
-        }
-        $outFile = 'constant.' . $dom->innertext . '.html';
-        $parent = $dom->parentNode()->parentNode();
-        $next = $parent->nextSibling();
-        if (!$next) {
-            continue;
-        }
-        $next = $next->children(0);
-        if (!$next) {
-            continue;
-        }
-        modifyUrl($next);
-        $html = $next->innertext;
-        if (!$html) {
-            continue;
-        }
-        if (trim($html) == '') {
-            continue;
-        }
-        $html = modifyStr($html);
-        if (strpos($outFile, '::')) {
-            continue;
-        }
-        echo $outFile . LINE;
-        file_put_contents(TEMP_PATH . '/' . $outFile, $html);
+    $dom = new SimpleHtmlDom(null, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
+    if (empty($str) || strlen($str) > MAX_FILE_SIZE) {
+        $dom->clear();
+        return false;
     }
-}
-
-function getClass(): array
-{
-    $clses = [];
-    if (@$handle = opendir(IN_PATH)) {
-        while (($file = readdir($handle)) !== false) {
-            $pre = 'class.';
-            if ((str_starts_with($file, $pre))) {
-                $clsName = substr($file, strlen($pre), strlen($file) - strlen($pre) - 5);
-                $clses[$clsName] = 1;
-            }
-        }
-    }
-    return $clses;
+    $dom->load($str, $lowercase, $stripRN);
+    return $dom;
 }
 
 /**
+ * 第4步 加载文本内容
+ * @param $name
+ * @return bool|string
+ */
+function loadStr($name): bool|string
+{
+    $path = IN_PATH . $name;
+    $content = file_get_contents($path) or die("Unable to open file!");
+    return $content;
+}
+
+/**
+ * 第三步
  * 处理函数
  */
 function handle($file = 'function.date.html'): void
@@ -227,22 +232,39 @@ function handle($file = 'function.date.html'): void
     $selector = str_get_html($content, true, true, DEFAULT_TARGET_CHARSET, false);
     $name = substr($file, 0, strlen($file) - 5);
     $dom = $selector->find("div[id='$name']", 0);
-
     modifyUrl($dom);
     handleStyle($dom);
-
     $html = $dom->outertext;
     $html = modifyStr($html);
-
     file_put_contents(TEMP_PATH . '/' . $file, $html);
     echo $file . LINE;
 }
 
+
+/**
+ * 第二步
+ * 处理类
+ * @return array
+ */
+function getClass(): array
+{
+    $class = [];
+    if (@$handle = opendir(IN_PATH)) {
+        while (($file = readdir($handle)) !== false) {
+            $pre = 'class.';
+            if ((str_starts_with($file, $pre))) {
+                $clsName = substr($file, strlen($pre), strlen($file) - strlen($pre) - 5);
+                $class[$clsName] = 1;
+            }
+        }
+    }
+    return $class;
+}
+
+// 第一步
 function handleAll(): void
 {
-    if (!is_dir(TEMP_PATH)) {
-        mkdir(TEMP_PATH);
-    }
+    if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
     $class = getClass();
     $class['function'] = 1;
     $class['class'] = 1;
@@ -261,4 +283,4 @@ function handleAll(): void
     }
 }
 
-handleAll();
+handleAll(); // 执行
