@@ -38,7 +38,7 @@ function myPrint(...$args)
  * @param $name
  * @return bool|string
  */
-function loadStr($name)
+function loadStr($name): bool|string
 {
     $path = IN_PATH . $name;
     $content = file_get_contents($path) or die("Unable to open file!");
@@ -49,20 +49,20 @@ function loadStr($name)
  * 修改衔接
  * @param simple_html_dom $dom
  */
-function modifyUrl($dom)
+function modifyUrl(simple_html_dom $dom): void
 {
     $links = $dom->find('a');
     foreach ($links as $iValue) {
         $a = $iValue;
         $href = $a->href;
-        if (strstr($href, 'http://')) {    // 不处理外链
+        if (str_contains($href, 'http://')) {    // 不处理外链
             continue;
         }
 
         $known = 0;
-        if (strstr($href, 'function.')) {
+        if (str_contains($href, 'function.')) {
             $known = 1;
-        } else if (strstr($a->innertext, '::')) {
+        } else if (str_contains($a->innertext, '::')) {
             $known = 1;
         }
 
@@ -79,7 +79,7 @@ function modifyUrl($dom)
 /**
  * 修改文本
  */
-function modifyStr($html)
+function modifyStr($html): array|string
 {
     // 防止注释异常终止
     $html = str_replace('/*', '//', $html);
@@ -88,11 +88,10 @@ function modifyStr($html)
     $html = str_replace('#0000BB', '#9876AA', $html);
     // 清理换行
     $html = str_replace("\r", '', $html);
-    $html = str_replace("\n", '', $html);
-    return $html;
+    return str_replace("\n", '', $html);
 }
 
-function modifyAttr($dom, $selector, $value, $attr = 'style')
+function modifyAttr($dom, $selector, $value, $attr = 'style'): void
 {
     $subs = $dom->find($selector);
     foreach ($subs as $sub) {
@@ -100,7 +99,7 @@ function modifyAttr($dom, $selector, $value, $attr = 'style')
     }
 }
 
-function modifyTag($dom, $selector, $outside, $pre, $after, $one = false)
+function modifyTag($dom, $selector, $outside, $pre, $after, $one = false): void
 {
     $subs = $dom->find($selector);
     foreach ($subs as $sub) {
@@ -115,12 +114,12 @@ function modifyTag($dom, $selector, $outside, $pre, $after, $one = false)
     }
 }
 
-function modifyOutput($dom)
+function modifyOutput($dom): void
 {
     $subs = $dom->find("pre");
     foreach ($subs as $sub) {
         $text = $sub->innertext();
-        if (substr($text, 0, 1) == "\n") {
+        if (str_starts_with($text, "\n")) {
             $text = substr($text, 1);
         }
         $text = '<span>' . str_replace("\n", "<br>", $text) . '</span>';
@@ -167,7 +166,7 @@ function handleStyle($dom)
     return $dom;
 }
 
-function handleConst($file = 'filesystem.consts.html')
+function handleConst($file = 'filesystem.consts.html'): void
 {
     $content = loadStr($file);
     $selector = str_get_html($content);
@@ -204,13 +203,13 @@ function handleConst($file = 'filesystem.consts.html')
     }
 }
 
-function getClass()
+function getClass(): array
 {
     $clses = [];
     if (@$handle = opendir(IN_PATH)) {
         while (($file = readdir($handle)) !== false) {
             $pre = 'class.';
-            if ((substr($file, 0, strlen($pre)) === $pre)) {
+            if ((str_starts_with($file, $pre))) {
                 $clsName = substr($file, strlen($pre), strlen($file) - strlen($pre) - 5);
                 $clses[$clsName] = 1;
             }
@@ -222,7 +221,7 @@ function getClass()
 /**
  * 处理函数
  */
-function handle($file = 'function.date.html')
+function handle($file = 'function.date.html'): void
 {
     $content = loadStr($file);
     $selector = str_get_html($content, true, true, DEFAULT_TARGET_CHARSET, false);
@@ -239,20 +238,20 @@ function handle($file = 'function.date.html')
     echo $file . LINE;
 }
 
-function handleAll()
+function handleAll(): void
 {
     if (!is_dir(TEMP_PATH)) {
         mkdir(TEMP_PATH);
     }
-    $clses = getClass();
-    $clses['function'] = 1;
-    $clses['class'] = 1;
-    $clses['reserved'] = 1;
+    $class = getClass();
+    $class['function'] = 1;
+    $class['class'] = 1;
+    $class['reserved'] = 1;
     if (@$handle = opendir(IN_PATH)) {
         while (($file = readdir($handle)) !== false) {
             $tokens = explode('.', $file);
             $prefix = $tokens[0];
-            if (@$clses[$prefix]) {
+            if (@$class[$prefix]) {
                 handle($file);
             }
             if ($tokens[count($tokens) - 2] == 'constants') {  // 收集常量
