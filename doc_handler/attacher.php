@@ -4,11 +4,7 @@ const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
 const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 const LINE = "\n";
 
-/**
- * @param ...$args
- * @return void
- */
-function myPrint(...$args): void
+function myPrint(...$args)
 {
     foreach ($args as $arg) {
         print_r($arg);
@@ -18,11 +14,11 @@ function myPrint(...$args): void
 
 /**
  * @param $dir
- * @param string $parent
- * @param array $files
- * @return array|void
+ * @param $parent
+ * @param $files
+ * @return array|mixed|void
  */
-function my_dir($dir, string $parent = '', array &$files = [])
+function my_dir($dir, $parent = '', &$files = [])
 {
     myPrint($dir);
     if (@$handle = opendir($dir)) { // 注意这里要加一个@，不然会有warning错误提示：）
@@ -40,28 +36,19 @@ function my_dir($dir, string $parent = '', array &$files = [])
     }
 }
 
-/**
- * @param $line
- * @return bool
- */
-function isComment($line): bool
+function isComment($line)
 {
     foreach (['/*', '*', '*/', '#'] as $item) {
-        if (str_starts_with($line, $item)) {
+        if (strpos($line, $item) === 0) {
             return true;
         }
     }
     return false;
 }
 
-/**
- * @param $token
- * @param $oldComment
- * @return mixed|string
- */
-function getComment($token, $oldComment): mixed
+function getComment($token, $oldComment)
 {
-    if (!str_starts_with($token, 'constant.'))  // 不是常量替换下划线
+    if (strpos($token, 'constant.') !== 0)  // 不是常量替换下划线
         $token = str_replace('_', '-', $token);
     $file = DOC_IN_PATH . $token . '.html';
     if (file_exists($file)) {
@@ -72,11 +59,11 @@ function getComment($token, $oldComment): mixed
             foreach ($olds as $old) {
                 $old2 = trim($old);
                 if (
-                    str_starts_with($old2, '* @param') ||  // 保留参数行
-                    str_starts_with($old2, '* @return')    // 保留return行
+                    strpos($old2, '* @param') === 0 ||  // 保留参数行
+                    strpos($old2, '* @return') === 0    // 保留return行
                 ) {
                     $keepLine .= strip_tags($old) . LINE;
-                } elseif (str_starts_with($old2, '#[')) {
+                } elseif (strpos($old2, '#[') === 0) {
                     $keepLine2 .= LINE . strip_tags($old);
                 }
             }
@@ -85,18 +72,14 @@ function getComment($token, $oldComment): mixed
             $keepLine = LINE . $keepLine;
         }
         $comment = file_get_contents($file);
-        return '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
+        $comment = '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
+        return $comment;
     } else {
         return $oldComment;
     }
 }
 
-/**
- * @param $line
- * @param $type
- * @return false|string
- */
-function isElement($line, $type): false|string
+function isElement($line, $type)
 {
     $tokens = explode(' ', $line);
     for ($i = 0; $i < count($tokens); $i++) {
@@ -112,60 +95,42 @@ function isElement($line, $type): false|string
     return false;
 }
 
-/**
- * @param $line
- * @return false|string
- */
-function isClass($line): false|string
+function isClass($line)
 {
     return isElement($line, 'class');
 }
 
-/**
- * @param $line
- * @return false|string
- */
-function isFunction($line): false|string
+function isFunction($line)
 {
     return isElement($line, 'function');
 }
 
-/**
- * @param $line
- * @return false|string
- */
-function isConst($line): false|string
+function isConst($line)
 {
     $line = str_replace(' ', '', $line);
     $pre = "define('";
-    if (str_starts_with($line, $pre)) {
+    if (strpos($line, $pre) === 0) {
         $line = str_replace($pre, '', $line);
-        return explode("'", $line)[0];
+        $const = explode("'", $line)[0];
+        return $const;
     }
     return false;
 }
 
-/**
- * @param $line
- * @return false|string
- */
-function isVar($line): false|string
+function isVar($line)
 {
     $line = str_replace(' ', '', $line);
     $pre = "$";
-    if (str_starts_with($line, $pre)) {
+    if (strpos($line, $pre) === 0) {
         $line = str_replace($pre, '', $line);
         $line = str_replace('_', '', $line);
-        return explode("=", $line)[0];
+        $var = explode("=", $line)[0];
+        return $var;
     }
     return false;
 }
 
-/**
- * @param $name
- * @return void
- */
-function handle($name): void
+function handle($name)
 {
     $file = DOC_OUT_PATH . $name;
     $newContent = '';
@@ -187,10 +152,10 @@ function handle($name): void
                 $newContent .= $newComment;
                 $comment = '';    // 注释已使用
             } else if ($function = isFunction($line)) {  // 函数方法
-                if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) {
+                if (substr($function, 0, 20) == 'PS_UNRESERVE_PREFIX_') {
                     $function = substr($function, 20);
                 }
-                $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
+                $blankPre = strpos($line, ' ') === 0;    // 前面空白是类方法的特征
                 $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
                 $newComment = getComment($function, $comment);
                 $newContent .= $newComment;
@@ -210,15 +175,12 @@ function handle($name): void
                 $comment = '';
             }
             $newContent .= $line;
-        }
+        };
     }
     file_put_contents(DOC_OUT_PATH . $name, $newContent);
 }
 
-/**
- * @return void
- */
-function handleAll(): void
+function handleAll()
 {
     $files = [];
     my_dir(DOC_OUT_PATH, '', $files);
