@@ -37,12 +37,13 @@ function handleAll()
             $filePath = IN_PATH . $file;
             if (in_array($tokens[0], $typeList)) {
                 save_file(LOG_PATH . 'class.log', "$filePath\n", true);
-                $dom = new DOMDocument();
+                $dom = new DOMDocument(encoding: 'utf8');
                 @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
                 $node = $dom->getElementById(substr($file, 0, strlen($file) - 5)); // 获取所需节点
                 $content = preg_replace('/ *\n */', '', $dom->saveHTML($node)); // 内容转成1行
-                save_file($filePath, $content); // 文件保存到临时目录
-            };
+                $classFile = TEMP_PATH . "$file";
+                save_file($classFile, $content); // 文件保存到临时目录
+            }
             // 收集常量
             if ($tokens[count($tokens) - 2] == 'constants') {
                 save_file(LOG_PATH . 'constants.log', "$filePath\n", true);
@@ -53,18 +54,14 @@ function handleAll()
                     if ($node->firstChild->nodeName == 'code') {
                         $codeNode = $node->firstChild;
                         $constName = $codeNode->textContent;
-                        $outFile = "constant.$constName.html";
-                        $next = $node->parentNode()->nextSibling();
-                        var_dump($next);
-                        // modifyUrl($next);
-                        // $html = $next->innertext;
-                        // if (!$html) continue;
-                        // if (trim($html) == '') continue;
-                        // if (strpos($outFile, '::')) continue;
-                        // save_file(TEMP_PATH . $outFile, $html);
+                        $constFile = TEMP_PATH . "constant.$constName.html";
+                        $nextNode = $node->parentNode->nextSibling;
+                        $html = $dom->saveHTML($nextNode);
+                        if (empty($html) || empty(trim($html)) || strpos($constFile, '::')) continue;
+                        save_file(LOG_PATH . 'const.log', "$constFile\n", true);
+                        save_file($constFile, $html);
                     }
                 }
-                die;
             }
         }
     }
@@ -77,7 +74,7 @@ function handleAll()
  * @param bool $isAppend 是否追加写入 默认false
  * @return void
  */
-function save_file(string $filePath, string $content, bool $isAppend = false)
+function save_file(string $filePath, string $content, bool $isAppend = false): void
 {
     $handle = fopen($filePath, $isAppend ? 'a+' : 'w+');
     fwrite($handle, $content);
@@ -94,13 +91,13 @@ function modifyUrl($node): void
     foreach ($links as $iValue) {
         $a = $iValue;
         $href = $a->href;
-        if (strstr($href, 'http://')) {    // 不处理外链
+        if (str_contains($href, 'http://')) {    // 不处理外链
             continue;
         }
         $known = 0;
-        if (strstr($href, 'function.')) {
+        if (str_contains($href, 'function.')) {
             $known = 1;
-        } else if (strstr($a->innertext, '::')) {
+        } else if (str_contains($a->innertext, '::')) {
             $known = 1;
         }
         if ($known) {   // 已知类型, 方法,类静态方法..
