@@ -43,23 +43,23 @@ function handleAll()
                 save_file($classFile, $content); // 文件保存到临时目录
             }
             // 收集常量
-            if ($tokens[count($tokens) - 2] == 'constants') {
-                $dom = new DOMDocument();
-                @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
-                $nodeList = $dom->getElementsByTagName('strong');
-                foreach ($nodeList as $node) {
-                    if ($node->firstChild->nodeName == 'code') {
-                        $codeNode = $node->firstChild;
-                        $constName = $codeNode->textContent;
-                        $constFile = TEMP_PATH . "constant.$constName.html";
-                        $nextNode = $node->parentNode->nextSibling;
-                        $html = $dom->saveHTML($nextNode);
-                        if (empty($html) || empty(trim($html)) || strpos($constFile, '::')) continue;
-                        save_file(LOG_PATH . 'const.log', "$constFile\n", true);
-                        save_file($constFile, $html);
-                    }
-                }
-            }
+            // if ($tokens[count($tokens) - 2] == 'constants') {
+            //     $dom = new DOMDocument();
+            //     @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
+            //     $nodeList = $dom->getElementsByTagName('strong');
+            //     foreach ($nodeList as $node) {
+            //         if ($node->firstChild->nodeName == 'code') {
+            //             $codeNode = $node->firstChild;
+            //             $constName = $codeNode->textContent;
+            //             $constFile = TEMP_PATH . "constant.$constName.html";
+            //             $nextNode = $node->parentNode->nextSibling;
+            //             $html = $dom->saveHTML($nextNode);
+            //             if (empty($html) || empty(trim($html)) || strpos($constFile, '::')) continue;
+            //             save_file(LOG_PATH . 'const.log', "$constFile\n", true);
+            //             save_file($constFile, $html);
+            //         }
+            //     }
+            // }
         }
     }
 }
