@@ -147,7 +147,6 @@ function handleStyle($dom)
     modifyAttr($dom, ".phpcode", "border-color:gray;background:#232525");
     // output
     modifyAttr($dom, ".screen", "color:AFB1B3;background:black;padding-left:5px;");
-
     // pre
     modifyOutput($dom);
     // 源码隐藏
@@ -162,7 +161,7 @@ function handleStyle($dom)
     modifyTag($dom, ".seealso .para", false, '<span>', '</span>', true);
     modifyTag($dom, ".changelog .para", false, '<span>', '</span>', true);
     // 添加分隔符,换行标签
-    modifyTag($dom, "div[class='refsect1']", true, '<br></br><div style="BORDER-TOP: gray 1px dashed; OVERFLOW: hidden; HEIGHT: 1px"></div>', '');
+    modifyTag($dom, "div[class='refsect1']", true, '<br><div style="BORDER-TOP: gray 1px dashed; OVERFLOW: hidden; HEIGHT: 1px"></div>', '');
     // modifyTag($dom, "div[class='refsect1']", true, '<br></br><hr></hr>', '');
     return $dom;
 }
