@@ -167,95 +167,51 @@ function handleStyle($dom)
     return $dom;
 }
 
-function handleConst($file = 'filesystem.consts.html')
-{
-    $content = loadStr($file);
-    $selector = str_get_html($content);
-
-    $doms = $selector->find('strong code');
-    foreach ($doms as $dom) {
-        if (!$dom) {
-            continue;
-        }
-        $outFile = 'constant.' . $dom->innertext . '.html';
-        $parent = $dom->parentNode()->parentNode();
-        $next = $parent->nextSibling();
-        if (!$next) {
-            continue;
-        }
-        $next = $next->children(0);
-        if (!$next) {
-            continue;
-        }
-        modifyUrl($next);
-        $html = $next->innertext;
-        if (!$html) {
-            continue;
-        }
-        if (trim($html) == '') {
-            continue;
-        }
-        $html = modifyStr($html);
-        if (strpos($outFile, '::')) {
-            continue;
-        }
-        echo $outFile . LINE;
-        file_put_contents(TEMP_PATH . '/' . $outFile, $html);
-    }
-}
-
-/**
- * 处理函数
- */
-function handle($file = 'function.date.html')
-{
-    $content = loadStr($file);
-    $selector = str_get_html($content, true, true, DEFAULT_TARGET_CHARSET, false);
-    $name = substr($file, 0, strlen($file) - 5);
-    $dom = $selector->find("div[id='$name']", 0);
-
-    modifyUrl($dom);
-    handleStyle($dom);
-
-    $html = $dom->outertext;
-    $html = modifyStr($html);
-
-    file_put_contents(TEMP_PATH . '/' . $file, $html);
-    echo $file . LINE;
-}
-
 function handleAll()
 {
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
-    // 开打手册目录句柄
-    $manHandle = @opendir(IN_PATH);
-    if (!$manHandle) return false;
-    /* -- 获取类文件名列表 --*/
-    $classList = [];
-    $classPrefix = 'class.'; // 类文件前缀
-    $classPreLen = strlen($classPrefix); // 类文件前缀长度
-    $fileSuffix = '.html'; // html 文件后缀
-    $fileSufLen = strlen($fileSuffix); // html 文件后缀
-    while (($file = readdir($manHandle))) {
+    $manHandle = @opendir(IN_PATH); // 开打手册目录句柄
+    if (!$manHandle) exit('目录打开失败');
+    $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
+    while (false !== ($file = readdir($manHandle))) {
         if (is_file(IN_PATH . $file)) {
-            if (substr($file, 0, $classPreLen) === $classPrefix) {
-                $className = substr($file, $classPreLen, strlen($file) - $classPreLen - $fileSufLen);
-                $classList[$className] = 1;
+            $tokens = explode('.', $file);
+            // 处理函数、类、保留字
+            if (in_array($tokens[0], $typeList)) {
+                $content = loadStr($file);
+                $selector = str_get_html($content, true, true, DEFAULT_TARGET_CHARSET, false);
+                $name = substr($file, 0, strlen($file) - 5);
+                $dom = $selector->find("div[id='$name']", 0);
+                modifyUrl($dom);
+                handleStyle($dom);
+                $html = $dom->outertext;
+                $html = modifyStr($html);
+                file_put_contents(TEMP_PATH . '/' . $file, $html);
+                echo $file . LINE;
+            };
+            // 收集常量
+            if ($tokens[count($tokens) - 2] == 'constants') {
+                $content = loadStr($file);
+                $selector = str_get_html($content);
+                $doms = $selector->find('strong code');
+                foreach ($doms as $dom) {
+                    if (!$dom) continue;
+                    $outFile = 'constant.' . $dom->innertext . '.html';
+                    $parent = $dom->parentNode()->parentNode();
+                    $next = $parent->nextSibling();
+                    if (!$next) continue;
+                    $next = $next->children(0);
+                    if (!$next) continue;
+                    modifyUrl($next);
+                    $html = $next->innertext;
+                    if (!$html) continue;
+                    if (trim($html) == '') continue;
+                    $html = modifyStr($html);
+                    if (strpos($outFile, '::')) continue;
+                    echo $outFile . LINE;
+                    file_put_contents(TEMP_PATH . '/' . $outFile, $html);
+                }
             }
-        }
-    }
-    $classList['function'] = 1;
-    $classList['class'] = 1;
-    $classList['reserved'] = 1;
-    /* -- 获取类文件名列表 end --*/
-    while (($file = readdir($manHandle))) {
-        $tokens = explode('.', $file);
-        $prefix = $tokens[0];
-        if (@$classList[$prefix]) {
-            handle($file);
-        }
-        if ($tokens[count($tokens) - 2] == 'constants') {  // 收集常量
-            handleConst($file);
         }
     }
 }
