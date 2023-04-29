@@ -20,7 +20,7 @@ const DOC_URL = 'https://www.php.net/manual/zh/';
 const IN_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
 
 /**
- *
+ * 临时文件存放目录
  */
 const TEMP_PATH = __DIR__ . '/../raw/temp/';
 
@@ -204,21 +204,6 @@ function handleConst($file = 'filesystem.consts.html')
     }
 }
 
-function getClass()
-{
-    $clses = [];
-    if (@$handle = opendir(IN_PATH)) {
-        while (($file = readdir($handle)) !== false) {
-            $pre = 'class.';
-            if ((substr($file, 0, strlen($pre)) === $pre)) {
-                $clsName = substr($file, strlen($pre), strlen($file) - strlen($pre) - 5);
-                $clses[$clsName] = 1;
-            }
-        }
-    }
-    return $clses;
-}
-
 /**
  * 处理函数
  */
@@ -241,23 +226,36 @@ function handle($file = 'function.date.html')
 
 function handleAll()
 {
-    if (!is_dir(TEMP_PATH)) {
-        mkdir(TEMP_PATH);
+    if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
+    // 开打手册目录句柄
+    $manHandle = @opendir(IN_PATH);
+    if (!$manHandle) return false;
+    /* -- 获取类文件名列表 --*/
+    $classList = [];
+    $classPrefix = 'class.'; // 类文件前缀
+    $classPreLen = strlen($classPrefix); // 类文件前缀长度
+    $fileSuffix = '.html'; // html 文件后缀
+    $fileSufLen = strlen($fileSuffix); // html 文件后缀
+    while (($file = readdir($manHandle))) {
+        if (is_file(IN_PATH . $file)) {
+            if (substr($file, 0, $classPreLen) === $classPrefix) {
+                $className = substr($file, $classPreLen, strlen($file) - $classPreLen - $fileSufLen);
+                $classList[$className] = 1;
+            }
+        }
     }
-    $clses = getClass();
-    $clses['function'] = 1;
-    $clses['class'] = 1;
-    $clses['reserved'] = 1;
-    if (@$handle = opendir(IN_PATH)) {
-        while (($file = readdir($handle)) !== false) {
-            $tokens = explode('.', $file);
-            $prefix = $tokens[0];
-            if (@$clses[$prefix]) {
-                handle($file);
-            }
-            if ($tokens[count($tokens) - 2] == 'constants') {  // 收集常量
-                handleConst($file);
-            }
+    $classList['function'] = 1;
+    $classList['class'] = 1;
+    $classList['reserved'] = 1;
+    /* -- 获取类文件名列表 end --*/
+    while (($file = readdir($manHandle))) {
+        $tokens = explode('.', $file);
+        $prefix = $tokens[0];
+        if (@$classList[$prefix]) {
+            handle($file);
+        }
+        if ($tokens[count($tokens) - 2] == 'constants') {  // 收集常量
+            handleConst($file);
         }
     }
 }
