@@ -40,8 +40,7 @@ function myPrint(...$args)
  */
 function loadStr($name)
 {
-    $path = IN_PATH . $name;
-    $content = file_get_contents($path) or die("Unable to open file!");
+    $content = file_get_contents(IN_PATH . $name) or die("Unable to open file!");
     return $content;
 }
 
@@ -168,6 +167,13 @@ function handleStyle($dom)
 
 function handleAll()
 {
+    $file = 'class.addressinfo.html';
+    $dom = load_dom($file);
+    // 获取所需节点
+    $node = $dom->getElementById(substr($file, 0, strlen($file) - 5));
+    $content = preg_replace('/ *\n */', '', $dom->saveHTML($node));
+    save_file($file, $content);
+
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
     $manHandle = @opendir(IN_PATH); // 开打手册目录句柄
     if (!$manHandle) exit('目录打开失败');
@@ -177,10 +183,12 @@ function handleAll()
             $tokens = explode('.', $file);
             // 处理函数、类、保留字
             if (in_array($tokens[0], $typeList)) {
-                $content = loadStr($file);
-                $selector = str_get_html($content, true, true, DEFAULT_TARGET_CHARSET, false);
-                $name = substr($file, 0, strlen($file) - 5);
-                $dom = $selector->find("div[id='$name']", 0);
+                $dom = load_dom($file);
+                // 获取所需节点
+                $dom->getElementById(substr($file, 0, strlen($file) - 5));
+                $html = $dom->saveHTML();
+                var_dump($html);
+                die;
                 modifyUrl($dom);
                 handleStyle($dom);
                 $html = $dom->outertext;
@@ -213,6 +221,33 @@ function handleAll()
             }
         }
     }
+}
+
+/**
+ * html文件载入DOM对象
+ * @param string $fileName
+ * @return DOMDocument
+ */
+function load_dom(string $fileName): DOMDocument
+{
+    $dom = new DOMDocument();
+    $dom->loadHTMLFile(IN_PATH . $fileName);
+    $dom->normalizeDocument();
+    return $dom;
+}
+
+/**
+ * 保存文件
+ * @param string $fileName
+ * @param string $content
+ * @param bool $isAppend 是否追加写入 默认false
+ * @return void
+ */
+function save_file(string $fileName, string $content, bool $isAppend = false)
+{
+    $handle = fopen(TEMP_PATH . $fileName, $isAppend ? 'a+' : 'w+');
+    fwrite($handle, $content);
+    fclose($handle);
 }
 
 handleAll();
