@@ -1,7 +1,5 @@
 <?php
 
-const LINE = "\n";
-
 /**
  * PHP文档外链
  * 也可设为本地链接 例: file:///D:/temp/php-chunked-xhtml/
@@ -30,23 +28,22 @@ function handleAll()
     $manHandle = @opendir(IN_PATH); // 开打手册目录句柄
     if (!$manHandle) exit('目录打开失败');
     $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
-    while (false !== ($file = readdir($manHandle))) {
-        if (is_file(IN_PATH . $file)) {
-            $tokens = explode('.', $file);
+    while (false !== ($fileName = readdir($manHandle))) {
+        if (is_file(IN_PATH . $fileName)) {
+            $tokens = explode('.', $fileName);
+            $filePath = IN_PATH . $fileName;
             // 处理函数、类、保留字
-            $filePath = IN_PATH . $file;
             if (in_array($tokens[0], $typeList)) {
-                save_file(LOG_PATH . 'class.log', "$filePath\n", true);
-                $dom = new DOMDocument(encoding: 'utf8');
+                $dom = new DOMDocument();
                 @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
-                $node = $dom->getElementById(substr($file, 0, strlen($file) - 5)); // 获取所需节点
+                $node = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
                 $content = preg_replace('/ *\n */', '', $dom->saveHTML($node)); // 内容转成1行
-                $classFile = TEMP_PATH . "$file";
+                $classFile = TEMP_PATH . "$fileName";
+                save_file(LOG_PATH . 'class.log', "$filePath\n", true);
                 save_file($classFile, $content); // 文件保存到临时目录
             }
             // 收集常量
             if ($tokens[count($tokens) - 2] == 'constants') {
-                save_file(LOG_PATH . 'constants.log', "$filePath\n", true);
                 $dom = new DOMDocument();
                 @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
                 $nodeList = $dom->getElementsByTagName('strong');
