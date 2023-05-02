@@ -84,14 +84,14 @@ function isComment(string $line): bool
     }
     return false;
 }
-
-function handle($allPath): void
+function handle($filePath): void
 {
     $newContent = '';
     $class = '';
     $oldComment = '';
-    $handle = fopen($allPath, "r");// 以只读方式打开一个文件
+    $handle = fopen($filePath, 'r');// 以只读方式打开一个文件
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
+        var_dump($filePath);
         if ($line = fgets($handle)) {// 从文件指针中读取一行
             // 拿到函数、方法、常量等的注释
             if (isComment($line)) {
@@ -123,7 +123,7 @@ function handle($allPath): void
             $newContent .= $line;
         };
     }
-    file_put_contents($allPath, $newContent);
+    file_put_contents($filePath, $newContent);
 }
 
 /**
