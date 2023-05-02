@@ -4,14 +4,6 @@ const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
 const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 const LINE = "\n";
 
-function myPrint(...$args)
-{
-    foreach ($args as $arg) {
-        print_r($arg);
-        echo PHP_EOL;
-    }
-}
-
 /**
  * @param $dir
  * @param $parent
@@ -20,7 +12,6 @@ function myPrint(...$args)
  */
 function my_dir($dir, $parent = '', &$files = [])
 {
-    myPrint($dir);
     if (@$handle = opendir($dir)) { // 注意这里要加一个@，不然会有warning错误提示：）
         while (($file = readdir($handle)) !== false) {
             if ($file != ".." && $file != ".") { // 排除根目录
@@ -180,7 +171,7 @@ function handle($name)
     file_put_contents(DOC_OUT_PATH . $name, $newContent);
 }
 
-function handleAll()
+function run(): void
 {
     $files = [];
     my_dir(DOC_OUT_PATH, '', $files);
