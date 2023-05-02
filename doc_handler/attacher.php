@@ -136,7 +136,7 @@ function run(string $parent = '', string $dirPath = PS_DOC_OUT_PATH): void
     $handle = @opendir($dirPath);
     if (!$handle) exit('目录打开失败');
     while (false !== ($file = readdir($handle))) {
-        if ($file != ".." && $file != ".") continue;  // 排除根目录
+        if ('..' === $file || '.' === $file) continue;  // 排除根目录
         $allPath = "$dirPath/$file"; // 文件全路径
         if (is_dir($allPath)) {// 如果是目录，就进行递归获取文件
             run("$parent/$file", $allPath);
