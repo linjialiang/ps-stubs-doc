@@ -1,46 +1,13 @@
 <?php
 
 const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
-const DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
+const PS_DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 const LINE = "\n";
 
-/**
- * @param $dir
- * @param $parent
- * @param $files
- * @return array|mixed|void
- */
-function my_dir($dir, $parent = '', &$files = [])
+function getComment($token, $oldComment = '')
 {
-    if (@$handle = opendir($dir)) { // 注意这里要加一个@，不然会有warning错误提示：）
-        while (($file = readdir($handle)) !== false) {
-            if ($file != ".." && $file != ".") { // 排除根目录
-                if (is_dir($dir . "/" . $file)) { // 如果是子文件夹，就进行递归
-                    my_dir($dir . "/" . $file, $parent . '/' . $file, $files);
-                } else { // 不然就将文件的名字存入数组
-                    $files[] = $parent . '/' . $file;
-                }
-            }
-        }
-        closedir($handle);
-        return $files;
-    }
-}
-
-function isComment($line)
-{
-    foreach (['/*', '*', '*/', '#'] as $item) {
-        if (strpos($line, $item) === 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function getComment($token, $oldComment)
-{
-    if (strpos($token, 'constant.') !== 0)  // 不是常量替换下划线
-        $token = str_replace('_', '-', $token);
+    // 不是常量替换下划线
+    if (!str_starts_with($token, 'constant.')) $token = str_replace('_', '-', $token);
     $file = DOC_IN_PATH . $token . '.html';
     if (file_exists($file)) {
         $keepLine = '';
@@ -50,11 +17,11 @@ function getComment($token, $oldComment)
             foreach ($olds as $old) {
                 $old2 = trim($old);
                 if (
-                    strpos($old2, '* @param') === 0 ||  // 保留参数行
-                    strpos($old2, '* @return') === 0    // 保留return行
+                    str_starts_with($old2, '* @param') ||  // 保留参数行
+                    str_starts_with($old2, '* @return')    // 保留return行
                 ) {
                     $keepLine .= strip_tags($old) . LINE;
-                } elseif (strpos($old2, '#[') === 0) {
+                } elseif (str_starts_with($old2, '#[')) {
                     $keepLine2 .= LINE . strip_tags($old);
                 }
             }
@@ -63,125 +30,121 @@ function getComment($token, $oldComment)
             $keepLine = LINE . $keepLine;
         }
         $comment = file_get_contents($file);
-        $comment = '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
-        return $comment;
+        return '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
     } else {
         return $oldComment;
     }
 }
 
-function isElement($line, $type)
+function isElement($line, $type): false|string
 {
-    $tokens = explode(' ', $line);
-    for ($i = 0; $i < count($tokens); $i++) {
-        if ($tokens[$i] == $type) {
-            $name = $tokens[$i + 1];
-            $name = trim($name);
-            if (strpos($name, '(')) {
-                $name = substr($name, 0, strpos($name, '('));
-            }
-            return $name;
+    $tokens = explode(' ', trim($line));
+    foreach ($tokens as $k => $v) {
+        if ($v == $type) {
+            $name = trim($tokens[$k + 1]);
+            return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
         }
     }
     return false;
 }
 
-function isClass($line)
-{
-    return isElement($line, 'class');
-}
-
-function isFunction($line)
-{
-    return isElement($line, 'function');
-}
-
-function isConst($line)
+function isConst($line): false|string
 {
     $line = str_replace(' ', '', $line);
     $pre = "define('";
-    if (strpos($line, $pre) === 0) {
+    if (str_starts_with($line, $pre)) {
         $line = str_replace($pre, '', $line);
-        $const = explode("'", $line)[0];
-        return $const;
+        return explode("'", $line)[0];
     }
     return false;
 }
 
-function isVar($line)
+function isVar($line): false|string
 {
     $line = str_replace(' ', '', $line);
     $pre = "$";
-    if (strpos($line, $pre) === 0) {
+    if (str_starts_with($line, $pre)) {
         $line = str_replace($pre, '', $line);
         $line = str_replace('_', '', $line);
-        $var = explode("=", $line)[0];
-        return $var;
+        return explode("=", $line)[0];
     }
     return false;
 }
 
-function handle($name)
+/**
+ * 验证是否是注释
+ * @param string $line
+ * @return bool
+ */
+function isComment(string $line): bool
 {
-    $file = DOC_OUT_PATH . $name;
+    foreach (['/**', '* ', '*/', '#['] as $item) {
+        if (str_starts_with(trim($line), $item)) return true;
+    }
+    return false;
+}
+
+function handle($fileName, $allPath): void
+{
     $newContent = '';
-    $handle = fopen($file, "r");// 以只读方式打开一个文件
-    $comment = '';
     $class = '';
+    $oldComment = '';
+    $handle = fopen($allPath, "r");// 以只读方式打开一个文件
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
         if ($line = fgets($handle)) {// 从文件指针中读取一行
-            $line1 = str_replace(' ', '', $line);
-            // 注释
-            if (isComment($line1)) {
-                $comment .= $line;
+            // 拿到函数、方法、常量等的注释
+            if (isComment($line)) {
+                $oldComment .= $line;
                 continue;
             }
-            // 类
-            if ($clsName = isClass($line)) {
-                $class = $clsName;
-                $newComment = getComment('class.' . $class, $comment);
+            // 注释转中文
+            if ($className = isElement($line, 'class')) {// 类名+类名注释
+                $class = $className;
+                $newComment = getComment('class.' . $class, $oldComment);
                 $newContent .= $newComment;
-                $comment = '';    // 注释已使用
-            } else if ($function = isFunction($line)) {  // 函数方法
-                if (substr($function, 0, 20) == 'PS_UNRESERVE_PREFIX_') {
-                    $function = substr($function, 20);
-                }
-                $blankPre = strpos($line, ' ') === 0;    // 前面空白是类方法的特征
+                $oldComment = '';    // 注释已使用
+            } elseif ($function = isElement($line, 'function')) {// 函数和类方法+注释
+                if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
+                $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
                 $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
-                $newComment = getComment($function, $comment);
+                $newComment = getComment($function, $oldComment);
                 $newContent .= $newComment;
-                $comment = '';    // 注释已使用
-            } else if ($const = isConst($line)) {    // 常量
-                $newComment = getComment('constant.' . $const, $comment);
+                $oldComment = '';    // 注释已使用
+            } elseif ($const = isConst($line)) {// 常量+注释
+                $newComment = getComment('constant.' . $const, $oldComment);
                 $newContent .= $newComment;
-                $comment = '';    // 注释已使用
-            } else if ($var = isVar($line)) {  // 预定义变量
-                $newComment = getComment('reserved.variables.' . $var, $comment);
+                $oldComment = '';    // 注释已使用
+            } elseif ($var = isVar($line)) {// 预定于变量+注释
+                $newComment = getComment('reserved.variables.' . $var, $oldComment);
                 $newContent .= $newComment;
-                $comment = '';    // 注释已使用
-            }
-            // 没有匹配到任何类型内容
-            if ($comment) {
-                $newContent .= $comment;
-                $comment = '';
+                $oldComment = '';    // 注释已使用
             }
             $newContent .= $line;
         };
     }
-    file_put_contents(DOC_OUT_PATH . $name, $newContent);
+    file_put_contents(PS_DOC_OUT_PATH . $fileName, $newContent);
 }
 
-function run(): void
+/**
+ * 递归获取所有目录
+ * @param string $parent 父级目录 /a/b/c.html
+ * @param string $dirPath
+ * @return void
+ */
+function run(string $parent = '', string $dirPath = PS_DOC_OUT_PATH): void
 {
-    $files = [];
-    my_dir(DOC_OUT_PATH, '', $files);
-    foreach ($files as $file) {
-        $suffix = substr(strrchr($file, '.'), 1);
-        if ($suffix === 'php') {
-            handle($file);
-            echo $file . LINE;
+    $handle = @opendir($dirPath);
+    if (!$handle) exit('目录打开失败');
+    while (false !== ($file = readdir($handle))) {
+        if ($file !== ".." && $file !== ".") continue;  // 排除根目录
+        $allPath = "$dirPath/$file"; // 文件全路径
+        if (is_dir($allPath)) {// 如果是目录，就进行递归获取文件
+            run("$parent/$file", $allPath);
+        } else {// 处理文件
+            if ('php' === substr(strrchr($file, '.'), 1)) handle($file, $allPath);
         }
     }
+    closedir($handle);
 }
 
 run();

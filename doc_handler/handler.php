@@ -34,10 +34,10 @@ function run(): void
 {
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
     if (!is_dir(LOG_PATH)) mkdir(LOG_PATH);
-    $manHandle = @opendir(IN_PATH); // 开打手册目录句柄
-    if (!$manHandle) exit('目录打开失败');
+    $handle = @opendir(IN_PATH); // 开打手册目录句柄
+    if (!$handle) exit('目录打开失败');
     $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
-    while (false !== ($fileName = readdir($manHandle))) {
+    while (false !== ($fileName = readdir($handle))) {
         if (is_file(IN_PATH . $fileName)) {
             $tokens = explode('.', $fileName);
             $filePath = IN_PATH . $fileName;
@@ -59,6 +59,7 @@ function run(): void
             }
         }
     }
+    closedir($handle);
 }
 
 /**
