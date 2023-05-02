@@ -56,7 +56,6 @@ function run(): void
     }
 }
 
-
 /**
  * 修改链接
  * @param $node
@@ -72,7 +71,7 @@ function modifyUrl($node): void
         // 已知类型, 方法,类静态方法..
         $className = $link->getAttribute('class');
         if ($className === 'function' || $className === 'methodname') {
-            $link->setAttribute('href', '{@link ' . $link->textContent . '}');
+            $link->setAttribute('href', "{@link {$link->textContent}}");
         } else {
             // 如果未匹配到任何类型, 改成官网外链
             // 网站外链为php 本地为html
@@ -101,7 +100,7 @@ function handleStyle($node, $dom): void
             'parameter' => 'color:#3A95FF',                                // 参数颜色
             'note' => 'border:1px gray solid',                             // note
             'phpcode' => 'border-color:gray;background:#232525',           // php代码
-            'screen' => 'color:AFB1B3;background:black;padding-left:5px;', // output
+            'example-contents screen' => 'color:AFB1B3;background:black;padding-left:5px;', // output
         ];
         if (isset($styleMap[$className])) $tag->setAttribute('style', $styleMap[$className]);
         // pre 增加<span>子标签，将换行改成<br>
