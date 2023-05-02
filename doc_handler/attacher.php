@@ -193,4 +193,4 @@ function handleAll()
     }
 }
 
-handleAll();
+run();

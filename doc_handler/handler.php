@@ -21,7 +21,11 @@ const TEMP_PATH = __DIR__ . '/../raw/temp/';
  */
 const LOG_PATH = __DIR__ . '/../raw/log/';
 
-function handleAll(): void
+/**
+ * 处理全部
+ * @return void
+ */
+function run(): void
 {
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
     if (!is_dir(LOG_PATH)) mkdir(LOG_PATH);
@@ -52,19 +56,6 @@ function handleAll(): void
     }
 }
 
-/**
- * 保存文件
- * @param string $filePath
- * @param string $content
- * @param bool $isAppend 是否追加写入 默认false
- * @return void
- */
-function save_file(string $filePath, string $content, bool $isAppend = false): void
-{
-    $handle = fopen($filePath, $isAppend ? 'a+' : 'w+');
-    fwrite($handle, $content);
-    fclose($handle);
-}
 
 /**
  * 修改链接
@@ -90,8 +81,12 @@ function modifyUrl($node): void
     }
 }
 
-handleAll();
-
+/**
+ * 处理样式
+ * @param $node
+ * @param $dom
+ * @return void
+ */
 function handleStyle($node, $dom): void
 {
     $tags = $node->getElementsByTagName('*');
@@ -126,3 +121,19 @@ function handleStyle($node, $dom): void
         }
     }
 }
+
+/**
+ * 保存文件
+ * @param string $filePath
+ * @param string $content
+ * @param bool $isAppend 是否追加写入 默认false
+ * @return void
+ */
+function save_file(string $filePath, string $content, bool $isAppend = false): void
+{
+    $handle = fopen($filePath, $isAppend ? 'a+' : 'w+');
+    fwrite($handle, $content);
+    fclose($handle);
+}
+
+run();
