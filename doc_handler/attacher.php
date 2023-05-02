@@ -3,7 +3,6 @@
 const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
 const PS_DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 const LINE = "\n";
-
 function getComment($file, $oldComment = '')
 {
     // 不是常量替换下划线
@@ -13,23 +12,22 @@ function getComment($file, $oldComment = '')
         $keepLine2 = '';
         if ($oldComment) {
             $olds = explode("\n", $oldComment);
+            $spaceLen = substr($olds[0], 0, (strlen($olds[0]) - strlen(ltrim($olds[0]))));
             foreach ($olds as $old) {
-                $old2 = trim($old);
-                if (
-                    str_starts_with($old2, '* @param') ||  // 保留参数行
-                    str_starts_with($old2, '* @return')    // 保留return行
-                ) {
-                    $keepLine .= strip_tags($old) . LINE;
+                // 获取开头空格，一个方法只需要一次
+                $old2 = ltrim($old);
+                // 保留参数行
+                // 保留return行
+                if (str_starts_with($old2, '* @param') || str_starts_with($old2, '* @return')) {
+                    $keepLine .= LINE . strip_tags($old);
                 } elseif (str_starts_with($old2, '#[')) {
                     $keepLine2 .= LINE . strip_tags($old);
                 }
             }
         }
-        if (!empty($keepLine)) {
-            $keepLine = LINE . $keepLine;
-        }
+        $spaceLen = $spaceLen ?? '';
         $comment = file_get_contents($filePath);
-        return '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
+        return  "$spaceLen/**" . LINE . "$spaceLen * " . $comment . LINE . $keepLine . "$spaceLen */" . $keepLine2 . LINE;
     }
     return $oldComment;
 }
@@ -40,7 +38,6 @@ function isElement($line, $type): false|string
     foreach ($tokens as $k => $v) {
         if ($v == $type) {
             $name = trim($tokens[$k + 1]);
-            var_dump($name);
             return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
         }
     }
@@ -94,35 +91,27 @@ function handle($filePath): void
             // 拿到函数、方法、常量等的注释
             if (isComment($line)) {
                 $oldComment .= $line;
-                continue;
+            } else {
+                // 注释转中文
+                if ($className = isElement($line, 'class')) {// 类名+类名注释
+                    $class = $className;
+                    $newComment = getComment('class.' . $class, $oldComment);
+                } elseif ($function = isElement($line, 'function')) {// 函数和类方法+注释
+                    if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
+                    $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
+                    $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
+                    $newComment = getComment($function, $oldComment);
+                } elseif ($const = isConst($line)) {// 常量+注释
+                    $newComment = getComment('constant.' . $const, $oldComment);
+                } elseif ($var = isVar($line)) {// 预定义变量+注释
+                    $newComment = getComment('reserved.variables.' . $var, $oldComment);
+                }
+                $oldComment = '';    // 注释已使用，清空
+                if (isset($newComment) && false !== $newComment) {
+                    $newContent .= $newComment;
+                }
+                $newContent .= $line;
             }
-            // 注释转中文
-            if ($className = isElement($line, 'class')) {// 类名+类名注释
-                $class = $className;
-                $newComment = getComment('class.' . $class, $oldComment);
-                if (false === $newComment) continue;
-                $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用，清空
-            } elseif ($function = isElement($line, 'function')) {// 函数和类方法+注释
-                if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
-                $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
-                $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
-                $newComment = getComment($function, $oldComment);
-                if (false === $newComment) continue;
-                $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用，清空
-            } elseif ($const = isConst($line)) {// 常量+注释
-                $newComment = getComment('constant.' . $const, $oldComment);
-                if (false === $newComment) continue;
-                $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用，清空
-            } elseif ($var = isVar($line)) {// 预定义变量+注释
-                $newComment = getComment('reserved.variables.' . $var, $oldComment);
-                if (false === $newComment) continue;
-                $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用，清空
-            }
-            $newContent .= $line;
         };
     }
     file_put_contents($filePath, $newContent);
