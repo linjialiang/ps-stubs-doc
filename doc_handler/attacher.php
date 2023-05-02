@@ -42,6 +42,7 @@ function isElement($line, $type): false|string
     foreach ($tokens as $k => $v) {
         if ($v == $type) {
             $name = trim($tokens[$k + 1]);
+            var_dump($name);
             return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
         }
     }
@@ -84,7 +85,7 @@ function isComment(string $line): bool
     return false;
 }
 
-function handle($fileName, $allPath): void
+function handle($allPath): void
 {
     $newContent = '';
     $class = '';
@@ -122,7 +123,7 @@ function handle($fileName, $allPath): void
             $newContent .= $line;
         };
     }
-    file_put_contents(PS_DOC_OUT_PATH . $fileName, $newContent);
+    file_put_contents($allPath, $newContent);
 }
 
 /**
@@ -137,11 +138,11 @@ function run(string $parent = '', string $dirPath = PS_DOC_OUT_PATH): void
     if (!$handle) exit('目录打开失败');
     while (false !== ($file = readdir($handle))) {
         if ('..' === $file || '.' === $file) continue;  // 排除根目录
-        $allPath = "$dirPath/$file"; // 文件全路径
-        if (is_dir($allPath)) {// 如果是目录，就进行递归获取文件
-            run("$parent/$file", $allPath);
-        } else {// 处理文件
-            if ('php' === substr(strrchr($file, '.'), 1)) handle($file, $allPath);
+        $filePath = "$dirPath/$file"; // 文件全路径
+        if (is_dir($filePath)) {// 如果是目录，就进行递归获取文件
+            run("$parent/$file", $filePath);
+        } elseif ('php' === substr(strrchr($file, '.'), 1)) {// 处理文件
+            handle($filePath);
         }
     }
     closedir($handle);
