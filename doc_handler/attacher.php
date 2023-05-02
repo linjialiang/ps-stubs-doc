@@ -4,12 +4,11 @@ const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
 const PS_DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 const LINE = "\n";
 
-function getComment($token, $oldComment = '')
+function getComment($file, $oldComment = '')
 {
     // 不是常量替换下划线
-    if (!str_starts_with($token, 'constant.')) $token = str_replace('_', '-', $token);
-    $file = DOC_IN_PATH . $token . '.html';
-    if (file_exists($file)) {
+    $filePath = DOC_IN_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
+    if (is_file($filePath)) {
         $keepLine = '';
         $keepLine2 = '';
         if ($oldComment) {
@@ -29,11 +28,10 @@ function getComment($token, $oldComment = '')
         if (!empty($keepLine)) {
             $keepLine = LINE . $keepLine;
         }
-        $comment = file_get_contents($file);
+        $comment = file_get_contents($filePath);
         return '/**' . LINE . ' * ' . $comment . $keepLine . ' */' . $keepLine2 . LINE;
-    } else {
-        return $oldComment;
     }
+    return $oldComment;
 }
 
 function isElement($line, $type): false|string
@@ -84,14 +82,14 @@ function isComment(string $line): bool
     }
     return false;
 }
+
 function handle($filePath): void
 {
+    $oldComment = '';
     $newContent = '';
     $class = '';
-    $oldComment = '';
     $handle = fopen($filePath, 'r');// 以只读方式打开一个文件
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
-        var_dump($filePath);
         if ($line = fgets($handle)) {// 从文件指针中读取一行
             // 拿到函数、方法、常量等的注释
             if (isComment($line)) {
@@ -102,23 +100,27 @@ function handle($filePath): void
             if ($className = isElement($line, 'class')) {// 类名+类名注释
                 $class = $className;
                 $newComment = getComment('class.' . $class, $oldComment);
+                if (false === $newComment) continue;
                 $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用
+                $oldComment = '';    // 注释已使用，清空
             } elseif ($function = isElement($line, 'function')) {// 函数和类方法+注释
                 if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
                 $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
                 $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
                 $newComment = getComment($function, $oldComment);
+                if (false === $newComment) continue;
                 $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用
+                $oldComment = '';    // 注释已使用，清空
             } elseif ($const = isConst($line)) {// 常量+注释
                 $newComment = getComment('constant.' . $const, $oldComment);
+                if (false === $newComment) continue;
                 $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用
-            } elseif ($var = isVar($line)) {// 预定于变量+注释
+                $oldComment = '';    // 注释已使用，清空
+            } elseif ($var = isVar($line)) {// 预定义变量+注释
                 $newComment = getComment('reserved.variables.' . $var, $oldComment);
+                if (false === $newComment) continue;
                 $newContent .= $newComment;
-                $oldComment = '';    // 注释已使用
+                $oldComment = '';    // 注释已使用，清空
             }
             $newContent .= $line;
         };
