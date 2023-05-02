@@ -21,7 +21,7 @@ const TEMP_PATH = __DIR__ . '/../raw/temp/';
  */
 const LOG_PATH = __DIR__ . '/../raw/log/';
 
-function handleAll()
+function handleAll(): void
 {
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
     if (!is_dir(LOG_PATH)) mkdir(LOG_PATH);
@@ -37,29 +37,17 @@ function handleAll()
                 $dom = new DOMDocument();
                 @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
                 $node = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
-                $content = preg_replace('/ *\n */', '', $dom->saveHTML($node)); // 内容转成1行
-                $classFile = TEMP_PATH . "$fileName";
+                // 修改节点下链接
+                modifyUrl($node);
+                // 处理样式
+                handleStyle($node, $dom);
+                // 重设代码颜色以便在黑色主题下查看
+                $html = preg_replace('/ *\n */', '', $dom->saveHTML($node)); // 内容转成1行
+                $html = str_replace('#0000BB', '#9876AA', $html);
+                $classFile = TEMP_PATH . $fileName;
                 save_file(LOG_PATH . 'class.log', "$filePath\n", true);
-                save_file($classFile, $content); // 文件保存到临时目录
+                save_file($classFile, $html); // 文件保存到临时目录
             }
-            // 收集常量
-            // if ($tokens[count($tokens) - 2] == 'constants') {
-            //     $dom = new DOMDocument();
-            //     @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
-            //     $nodeList = $dom->getElementsByTagName('strong');
-            //     foreach ($nodeList as $node) {
-            //         if ($node->firstChild->nodeName == 'code') {
-            //             $codeNode = $node->firstChild;
-            //             $constName = $codeNode->textContent;
-            //             $constFile = TEMP_PATH . "constant.$constName.html";
-            //             $nextNode = $node->parentNode->nextSibling;
-            //             $html = $dom->saveHTML($nextNode);
-            //             if (empty($html) || empty(trim($html)) || strpos($constFile, '::')) continue;
-            //             save_file(LOG_PATH . 'const.log', "$constFile\n", true);
-            //             save_file($constFile, $html);
-            //         }
-            //     }
-            // }
         }
     }
 }
@@ -84,27 +72,57 @@ function save_file(string $filePath, string $content, bool $isAppend = false): v
  */
 function modifyUrl($node): void
 {
-    $links = $node->find('a');
-    foreach ($links as $iValue) {
-        $a = $iValue;
-        $href = $a->href;
-        if (str_contains($href, 'http://')) {    // 不处理外链
-            continue;
-        }
-        $known = 0;
-        if (str_contains($href, 'function.')) {
-            $known = 1;
-        } else if (str_contains($a->innertext, '::')) {
-            $known = 1;
-        }
-        if ($known) {   // 已知类型, 方法,类静态方法..
-            $href = '{@link ' . $a->innertext . '}';
-            $a->outertext = $href;
-        } else {        // 如果未匹配到任何类型, 改成官网外链
-            $href = str_replace('.html', '.php', $href);    // 网站外链为php 本地为html
-            $a->href = DOC_URL . $href;
+    $links = $node->getElementsByTagName('a');
+    foreach ($links as $link) {
+        $href = $link->getAttribute('href');
+        // 不处理外链
+        if (str_contains($href, 'http://')) continue;
+        if (str_contains($href, 'https://')) continue;
+        // 已知类型, 方法,类静态方法..
+        $className = $link->getAttribute('class');
+        if ($className === 'function' || $className === 'methodname') {
+            $link->setAttribute('href', '{@link ' . $link->textContent . '}');
+        } else {
+            // 如果未匹配到任何类型, 改成官网外链
+            // 网站外链为php 本地为html
+            $link->setAttribute('href', DOC_URL . str_replace('.html', '.php', $href));
         }
     }
 }
 
 handleAll();
+
+function handleStyle($node, $dom): void
+{
+    $tags = $node->getElementsByTagName('*');
+    // 修改样式
+    foreach ($tags as $tag) {
+        $className = $tag->getAttribute('class');
+        // 参数标签, 9070A1 编辑器紫, EE82EE 鲜艳紫, 00B5FF 鲜艳蓝,4285F4 一般蓝, 19A1FA 3A95FF ok蓝
+        $styleMap = [
+            'methodname' => 'color:#CC7832',                               // 方法颜色
+            'function' => 'color:#CC7832',                                 // 方法颜色
+            'type' => 'color:#EAB766',                                     // 类型颜色
+            'parameter' => 'color:#3A95FF',                                // 参数颜色
+            'note' => 'border:1px gray solid',                             // note
+            'phpcode' => 'border-color:gray;background:#232525',           // php代码
+            'screen' => 'color:AFB1B3;background:black;padding-left:5px;', // output
+        ];
+        if (isset($styleMap[$className])) $tag->setAttribute('style', $styleMap[$className]);
+        // pre 增加<span>子标签，将换行改成<br>
+        if ($tag->nodeName == 'pre' && !$tag->hasAttribute('class')) {
+            $preChild = $dom->createElement('span');
+            $textList = explode("\n", $tag->textContent);
+            $tag->textContent = "";
+            foreach ($textList as $text) {
+                if (!empty($text)) {
+                    $childText = $dom->createTextNode($text);
+                    $preChild->appendChild($childText);
+                    $childElement = $dom->createElement('br');
+                    $preChild->appendChild($childElement);
+                }
+            }
+            $tag->appendChild($preChild);
+        }
+    }
+}
