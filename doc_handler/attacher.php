@@ -27,9 +27,10 @@ function getComment($file, $oldComment = '')
         }
         $spaceLen = $spaceLen ?? '';
         $comment = file_get_contents($filePath);
-        return  "$spaceLen/**" . LINE . "$spaceLen * " . $comment . LINE . $keepLine . "$spaceLen */" . $keepLine2 . LINE;
+        return "$spaceLen/**" . LINE . "$spaceLen * " . $comment . $keepLine . LINE . "$spaceLen */" . $keepLine2 . LINE;
+    } else {
+        return $oldComment;
     }
-    return $oldComment;
 }
 
 function isElement($line, $type): false|string
@@ -89,7 +90,9 @@ function handle($filePath): void
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
         if ($line = fgets($handle)) {// 从文件指针中读取一行
             // 拿到函数、方法、常量等的注释
-            if (isComment($line)) {
+            if (empty(trim($line))) {
+                continue;
+            } elseif (isComment($line)) {
                 $oldComment .= $line;
             } else {
                 // 注释转中文
@@ -106,13 +109,11 @@ function handle($filePath): void
                 } elseif ($var = isVar($line)) {// 预定义变量+注释
                     $newComment = getComment('reserved.variables.' . $var, $oldComment);
                 }
+                $newContent .= $newComment ?? $oldComment;
+                $newContent .= $line . LINE;
                 $oldComment = '';    // 注释已使用，清空
-                if (isset($newComment) && false !== $newComment) {
-                    $newContent .= $newComment;
-                }
-                $newContent .= $line;
             }
-        };
+        }
     }
     file_put_contents($filePath, $newContent);
 }

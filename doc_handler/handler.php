@@ -53,6 +53,7 @@ function run(): void
                 // 重设代码颜色以便在黑色主题下查看
                 $html = preg_replace('/ *' . LINE_BREAK . ' */', '', $dom->saveHTML($node)); // 内容转成1行
                 $html = str_replace('#0000BB', '#9876AA', $html);
+                $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
                 $classFile = TEMP_PATH . $fileName;
                 save_file(LOG_PATH . 'class.log', "$filePath" . LINE_BREAK, true);
                 save_file($classFile, $html); // 文件保存到临时目录
