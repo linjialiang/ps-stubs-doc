@@ -31,7 +31,7 @@ const TEMP_PATH = __DIR__ . '/raw/temp/';
 /**
  * 指定换行符
  */
-const LINE_BREAK = "\n";
+const LINE = "\n";
 
 require __DIR__ . '/src/DOM.php';
 
@@ -48,15 +48,15 @@ function run(): void
     if (!($handle = @opendir(PHP_PATH))) exit('目录打开失败');
     $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
     while (false !== ($fileName = readdir($handle))) {
-        if (!is_file(PHP_PATH . $fileName)) continue;
+        $filePath = PHP_PATH . $fileName;
+        if (!is_file($filePath)) continue;
         $tokens = explode('.', $fileName);
         // 处理函数、类、保留字
         if (!in_array($tokens[0], $typeList)) continue;
-        $dom = new DOM();
-        $filePath = PHP_PATH . $fileName;
         // html文件载入DOM对象
+        $dom = new DOM();
         if (!$dom->loadHTMLFile($filePath)) continue;
-        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
+        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素
         if (empty($element)) continue;
         // 修改节点下链接
         modifyUrl($element, $dom);
@@ -64,11 +64,10 @@ function run(): void
         handleStyle($element, $dom);
         // 重设代码颜色以便在黑色主题下查看
         $html = $dom->saveHTML($element);
-        $html = preg_replace('/ *' . LINE_BREAK . ' */', '', $html); // 内容转成1行
+        $html = preg_replace('/ *' . LINE . ' */', '', $html); // 内容转成1行
         $html = str_replace('#0000BB', '#9876AA', $html);
         $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
         $classFile = TEMP_PATH . $fileName;
-        save_file(LOG_PATH . 'class.log', "$filePath" . LINE_BREAK, true);
         save_file($classFile, $html); // 文件保存到临时目录
     }
     closedir($handle);
