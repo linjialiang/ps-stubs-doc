@@ -4,22 +4,17 @@
  * PHP文档外链
  * 也可设为本地链接 例: file:///D:/temp/php-chunked-xhtml/
  */
-const DOC_URL = 'https://www.php.net/manual/zh/';
+const PHP_URL = 'https://www.php.net/manual/zh/';
 
 /**
- * 文档手册
+ * php中文文档手册
  */
-const IN_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
+const PHP_PATH = __DIR__ . '/raw/php-chunked-xhtml/';
 
 /**
  * 临时文件存放目录
  */
-const TEMP_PATH = __DIR__ . '/../raw/temp/';
-
-/**
- * 日志路径
- */
-const LOG_PATH = __DIR__ . '/../raw/log/';
+const TEMP_PATH = __DIR__ . '/raw/temp/';
 
 /**
  * 指定换行符
@@ -33,26 +28,26 @@ const LINE_BREAK = "\n";
 function run(): void
 {
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
-    if (!is_dir(LOG_PATH)) mkdir(LOG_PATH);
-    $handle = @opendir(IN_PATH); // 开打手册目录句柄
-    if (!$handle) exit('目录打开失败');
+    // 开打php中文手册目录句柄
+    if (!($handle = @opendir(PHP_PATH))) exit('目录打开失败');
     $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
     while (false !== ($fileName = readdir($handle))) {
-        if (!is_file(IN_PATH . $fileName)) continue;
+        if (!is_file(PHP_PATH . $fileName)) continue;
         $tokens = explode('.', $fileName);
-        $filePath = IN_PATH . $fileName;
         // 处理函数、类、保留字
         if (!in_array($tokens[0], $typeList)) continue;
         $dom = new DOMDocument();
-        @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
-        $node = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
-        if (empty($node)) continue;
+        $filePath = PHP_PATH . $fileName;
+        // html文件载入DOM对象
+        if (!$dom->loadHTMLFile($filePath)) continue;
+        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
+        if (empty($element)) continue;
         // 修改节点下链接
-        modifyUrl($node, $dom);
+        modifyUrl($element, $dom);
         // 处理样式
-        handleStyle($node, $dom);
+        handleStyle($element, $dom);
         // 重设代码颜色以便在黑色主题下查看
-        $html = $dom->saveHTML($node);
+        $html = $dom->saveHTML($element);
         $html = preg_replace('/ *' . LINE_BREAK . ' */', '', $html); // 内容转成1行
         $html = str_replace('#0000BB', '#9876AA', $html);
         $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
@@ -65,12 +60,12 @@ function run(): void
 
 /**
  * 修改链接
- * @param $node
+ * @param $element
  * @param $dom
  */
-function modifyUrl($node, $dom): void
+function modifyUrl($element, $dom)
 {
-    $links = $node->getElementsByTagName('a');
+    $links = $element->getElementsByTagName('a');
     foreach ($links as $link) {
         // 不处理外链
         $href = $link->getAttribute('href');
@@ -79,36 +74,36 @@ function modifyUrl($node, $dom): void
         // 已知类型, 方法,类静态方法..
         $className = $link->getAttribute('class');
         if ($className === 'function' || $className === 'methodname') {
+            var_dump($link->parentNode);
+            die;
             // 创建一个新的文本节点
             $text = "{@link $link->textContent}"; // 拿到文本内容，并修改成 phpstorm 的连接
             $childText = $dom->createTextNode($text);
-            // 拿到父节点
-            $parent = $link->parentNode;
-            // 替换子节点
-            $parent->replaceChild($childText, $link);
-            // // 在子节点之前插入
-            // $parent->insertBefore($childText, $link);
-            // // 移除a节点
-            // $parent->removeChild($link);
-            // unset($parent);
-            // unset($childText);
+            // // 替换子节点
+            // $link->parentNode->replaceChild($childText, $link);
+            $link->replaceWith($childText);
+            // if ($href == 'function.array-intersect-assoc.html') {
+            //     var_dump($link);die;
+            //     $p = $link->parentNode;
+            //     echo $dom->saveHTML($p);
+            //     die;
+            // }
         } else {
             // 如果未匹配到任何类型, 改成官网外链
             // 网站外链为php 本地为html
-            $link->setAttribute('href', DOC_URL . str_replace('.html', '.php', $href));
+            $link->setAttribute('href', PHP_URL . str_replace('.html', '.php', $href));
         }
     }
 }
 
 /**
  * 处理样式
- * @param $node
+ * @param $element
  * @param $dom
- * @return void
  */
-function handleStyle($node, $dom): void
+function handleStyle($element, $dom)
 {
-    $tags = $node->getElementsByTagName('*');
+    $tags = $element->getElementsByTagName('*');
     // 修改样式
     foreach ($tags as $tag) {
         $className = $tag->getAttribute('class');

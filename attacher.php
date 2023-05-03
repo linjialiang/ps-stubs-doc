@@ -1,12 +1,24 @@
 <?php
 
-const DOC_IN_PATH = __DIR__ . '/../raw/temp/';
-const PS_DOC_OUT_PATH = __DIR__ . '/../raw/phpstorm-stubs';
+/**
+ * 临时文件存放目录
+ */
+const TEMP_PATH = __DIR__ . '/raw/temp/';
+
+/**
+ * phpstorm-stubs 目录
+ */
+const PS_PATH = __DIR__ . '/raw/phpstorm-stubs';
+
+/**
+ * 指定换行符
+ */
 const LINE = "\n";
+
 function getComment($file, $oldComment = '')
 {
     // 不是常量替换下划线
-    $filePath = DOC_IN_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
+    $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
     if (is_file($filePath)) {
         $keepLine = '';
         $keepLine2 = '';
@@ -124,7 +136,7 @@ function handle($filePath): void
  * @param string $dirPath
  * @return void
  */
-function run(string $parent = '', string $dirPath = PS_DOC_OUT_PATH): void
+function run(string $parent = '', string $dirPath = PS_PATH): void
 {
     $handle = @opendir($dirPath);
     if (!$handle) exit('目录打开失败');
