@@ -1,4 +1,16 @@
 <?php
+// +----------------------------------------------------------------------
+// | php-doc [ PHP is the best language for web programming ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2022-2023 linjialiang All rights reserved.
+// +----------------------------------------------------------------------
+// | Author: linjialiang <linjialiang@163.com>
+// +----------------------------------------------------------------------
+// | CreateTime: 2023-05-03 14:04:35
+// +----------------------------------------------------------------------
+declare (strict_types=1);
+
+use src\DOM;
 
 /**
  * PHP文档外链
@@ -21,8 +33,12 @@ const TEMP_PATH = __DIR__ . '/raw/temp/';
  */
 const LINE_BREAK = "\n";
 
+require __DIR__ . '/src/DOM.php';
+
+run();
+
 /**
- * 处理全部
+ * 处理文档
  * @return void
  */
 function run(): void
@@ -36,7 +52,7 @@ function run(): void
         $tokens = explode('.', $fileName);
         // 处理函数、类、保留字
         if (!in_array($tokens[0], $typeList)) continue;
-        $dom = new DOMDocument();
+        $dom = new DOM();
         $filePath = PHP_PATH . $fileName;
         // html文件载入DOM对象
         if (!$dom->loadHTMLFile($filePath)) continue;
@@ -149,5 +165,3 @@ function save_file(string $filePath, string $content, bool $isAppend = false): v
     fwrite($handle, $content);
     fclose($handle);
 }
-
-run();

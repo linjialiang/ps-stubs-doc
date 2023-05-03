@@ -16,5 +16,8 @@ use DOMDocument;
 
 class DOM extends DOMDocument
 {
-    
+    public function __construct(string $version = '1.0', string $encoding = 'utf-8')
+    {
+        parent::__construct($version, $encoding);
+    }
 }
