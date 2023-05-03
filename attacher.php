@@ -47,15 +47,10 @@ function getComment($file, $oldComment = '')
 
 function isElement($line, $type): false|string
 {
-    $tokens = explode(' ', trim($line));
+    $tokens = explode(' ', $line);
     foreach ($tokens as $k => $v) {
-        if ($v == $type) {
-            $newKey = $k + 1;
-            try {
-                $name = trim($tokens[$newKey]);
-            } catch (Exception $e) {
-                var_dump($e->getMessage());
-            }
+        if ($v == $type && !empty($tokens[$k + 1])) {
+            $name = trim($tokens[($k + 1)]);
             return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
         }
     }
@@ -106,24 +101,24 @@ function handle($filePath): void
     $handle = fopen($filePath, 'r');// 以只读方式打开一个文件
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
         if ($line = fgets($handle)) {// 从文件指针中读取一行
+            $handleLine = trim($line); // 处理掉首尾空白的行
             // 拿到函数、方法、常量等的注释
-            $newLine = trim($line);
-            if (empty($newLine)) continue;
+            if (empty($handleLine)) continue;
             if (isComment($line)) {
                 $oldComment .= $line;
             } else {
                 // 注释转中文
-                if ($className = isElement($line, 'class')) {// 类名+类名注释
+                if ($className = isElement($handleLine, 'class')) {// 类名+类名注释
                     $class = $className;
                     $newComment = getComment('class.' . $class, $oldComment);
-                } elseif ($function = isElement($line, 'function')) {// 函数和类方法+注释
+                } elseif ($function = isElement($handleLine, 'function')) {// 函数和类方法+注释
                     if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
                     $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
                     $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
                     $newComment = getComment($function, $oldComment);
-                } elseif ($const = isConst($line)) {// 常量+注释
+                } elseif ($const = isConst($handleLine)) {// 常量+注释
                     $newComment = getComment('constant.' . $const, $oldComment);
-                } elseif ($var = isVar($line)) {// 预定义变量+注释
+                } elseif ($var = isVar($handleLine)) {// 预定义变量+注释
                     $newComment = getComment('reserved.variables.' . $var, $oldComment);
                 }
                 $newContent .= $newComment ?? $oldComment;
