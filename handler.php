@@ -66,7 +66,7 @@ function run(): void
         handleStyle($element, $dom);
         // 重设代码颜色以便在黑色主题下查看
         $html = $dom->saveHTML($element);
-        $html = preg_replace('/ *' . LINE . ' */', '', $html); // 内容转成1行
+        // $html = preg_replace('/ *' . LINE . ' */', '', $html); // 内容转成1行
         $html = str_replace('#0000BB', '#9876AA', $html);
         $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
         $classFile = TEMP_PATH . $fileName;
@@ -86,19 +86,19 @@ function modifyUrl($element, $dom): void
     foreach ($links as $link) { // DOMElement
         // 不处理外链
         $url = $link->getAttribute('href');
-        if (str_contains($url, 'http://')) continue;
-        if (str_contains($url, 'https://')) continue;
+        if (str_contains($url, 'http://') || str_contains($url, 'https://')) continue;
         // 已知类型, 方法,类静态方法..
+        // 处理方法
         $className = $link->getAttribute('class');
         if ($className === 'function' || $className === 'methodname') {
-            var_dump($link->parentNode);
-            die;
+            $parent = $link->parentNode;
             // 创建一个新的文本节点
             $text = "{@link $link->textContent}"; // 拿到文本内容，并修改成 phpstorm 的连接
-            $childText = $dom->createTextNode($text);
+            $textNode = $dom->createTextNode($text);
             // // 替换子节点
             // $link->parentNode->replaceChild($childText, $link);
-            $link->replaceWith($childText);
+            $parent->removeChild($link);
+            $parent->insertBefore($textNode);
             // if ($href == 'function.array-intersect-assoc.html') {
             //     var_dump($link);die;
             //     $p = $link->parentNode;
@@ -112,6 +112,8 @@ function modifyUrl($element, $dom): void
         }
     }
 }
+mysqli::poll()
+$mysql = new mysqli();
 
 /**
  * 处理样式
