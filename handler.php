@@ -112,8 +112,6 @@ function modifyUrl($element, $dom): void
         }
     }
 }
-mysqli::poll()
-$mysql = new mysqli();
 
 /**
  * 处理样式
