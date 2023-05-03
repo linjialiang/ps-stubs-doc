@@ -83,7 +83,9 @@ function run(): void
 function modifyUrl($element, $dom): void
 {
     $links = $element->getElementsByTagName('a'); // DOMNodeList
-    foreach ($links as $link) { // DOMElement
+    $linkCount = $links->count();
+    for ($i = $linkCount - 1; $i >= 0; $i--) {
+        $link = $links->item($i);
         // 不处理外链
         $url = $link->getAttribute('href');
         if (str_contains($url, 'http://') || str_contains($url, 'https://')) continue;
@@ -95,16 +97,8 @@ function modifyUrl($element, $dom): void
             // 创建一个新的文本节点
             $text = "{@link $link->textContent}"; // 拿到文本内容，并修改成 phpstorm 的连接
             $textNode = $dom->createTextNode($text);
-            // // 替换子节点
-            // $link->parentNode->replaceChild($childText, $link);
-            $parent->removeChild($link);
-            $parent->insertBefore($textNode);
-            // if ($href == 'function.array-intersect-assoc.html') {
-            //     var_dump($link);die;
-            //     $p = $link->parentNode;
-            //     echo $dom->saveHTML($p);
-            //     die;
-            // }
+            // 替换子节点
+            $parent->replaceChild($textNode, $link);
         } else {
             // 如果未匹配到任何类型, 改成官网外链
             // 网站外链为php 本地为html

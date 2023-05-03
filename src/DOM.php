@@ -11,8 +11,8 @@
 declare (strict_types=1);
 
 namespace src;
-
 use DOMDocument;
+use PharData;
 
 class DOM extends DOMDocument
 {
