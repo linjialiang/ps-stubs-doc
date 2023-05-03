@@ -28,11 +28,6 @@ const PHP_PATH = __DIR__ . '/raw/php-chunked-xhtml/';
  */
 const TEMP_PATH = __DIR__ . '/raw/temp/';
 
-/**
- * 指定换行符
- */
-const LINE = "\n";
-
 require __DIR__ . '/src/DOM.php';
 
 run();
@@ -66,7 +61,7 @@ function run(): void
         handleStyle($element, $dom);
         // 重设代码颜色以便在黑色主题下查看
         $html = $dom->saveHTML($element);
-        $html = preg_replace('/ *' . LINE . ' */', '', $html); // 内容转成1行
+        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
         $html = str_replace('#0000BB', '#9876AA', $html);
         $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
         $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错

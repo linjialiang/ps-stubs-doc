@@ -51,7 +51,11 @@ function isElement($line, $type): false|string
     foreach ($tokens as $k => $v) {
         if ($v == $type) {
             $newKey = $k + 1;
-            $name = trim($tokens[$newKey]);
+            try {
+                $name = trim($tokens[$newKey]);
+            } catch (Exception $e) {
+                var_dump($e->getMessage());
+            }
             return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
         }
     }
@@ -103,9 +107,9 @@ function handle($filePath): void
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
         if ($line = fgets($handle)) {// 从文件指针中读取一行
             // 拿到函数、方法、常量等的注释
-            if (empty(trim($line))) {
-                continue;
-            } elseif (isComment($line)) {
+            $newLine = trim($line);
+            if (empty($newLine)) continue;
+            if (isComment($line)) {
                 $oldComment .= $line;
             } else {
                 // 注释转中文
