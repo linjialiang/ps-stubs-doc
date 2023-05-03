@@ -52,13 +52,13 @@ function run(): void
         if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
         $filePath = PHP_PATH . $fileName;
         if (!is_file($filePath)) continue;
-        $tokens = explode('.', $fileName);
+        $token = explode('.', $fileName)[0];
         // 处理函数、类、保留字
-        if (!in_array($tokens[0], $typeList)) continue;
+        if (!in_array($token, $typeList)) continue;
         // html文件载入DOM对象
         $dom = new DOM();
-        if (!$dom->loadHTMLFile($filePath)) continue;
-        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素
+        if (!@$dom->loadHTMLFile($filePath)) continue;
+        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素 DOMElement
         if (empty($element)) continue;
         // 修改节点下链接
         modifyUrl($element, $dom);
@@ -80,14 +80,14 @@ function run(): void
  * @param $element
  * @param $dom
  */
-function modifyUrl($element, $dom)
+function modifyUrl($element, $dom): void
 {
-    $links = $element->getElementsByTagName('a');
-    foreach ($links as $link) {
+    $links = $element->getElementsByTagName('a'); // DOMNodeList
+    foreach ($links as $link) { // DOMElement
         // 不处理外链
-        $href = $link->getAttribute('href');
-        if (str_contains($href, 'http://')) continue;
-        if (str_contains($href, 'https://')) continue;
+        $url = $link->getAttribute('href');
+        if (str_contains($url, 'http://')) continue;
+        if (str_contains($url, 'https://')) continue;
         // 已知类型, 方法,类静态方法..
         $className = $link->getAttribute('class');
         if ($className === 'function' || $className === 'methodname') {
@@ -108,7 +108,7 @@ function modifyUrl($element, $dom)
         } else {
             // 如果未匹配到任何类型, 改成官网外链
             // 网站外链为php 本地为html
-            $link->setAttribute('href', PHP_URL . str_replace('.html', '.php', $href));
+            $link->setAttribute('href', PHP_URL . str_replace('.html', '.php', $url));
         }
     }
 }
