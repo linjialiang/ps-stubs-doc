@@ -87,6 +87,7 @@ function isVar($line): false|string
  */
 function isComment(string $line): bool
 {
+    // TODO #[ 开头的有些是在注释下面，有些是在函数和方法里面，待解决
     foreach (['/**', '* ', '*/', '#['] as $item) {
         if (str_starts_with(trim($line), $item)) return true;
     }
