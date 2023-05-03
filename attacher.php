@@ -50,7 +50,8 @@ function isElement($line, $type): false|string
     $tokens = explode(' ', trim($line));
     foreach ($tokens as $k => $v) {
         if ($v == $type) {
-            $name = trim($tokens[$k + 1]);
+            $newKey = $k + 1;
+            $name = trim($tokens[$newKey]);
             return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
         }
     }
