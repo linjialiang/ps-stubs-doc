@@ -84,24 +84,20 @@ function modifyUrl($element, $dom): void
 {
     $links = $element->getElementsByTagName('a'); // DOMNodeList
     $linkCount = $links->count();
+    // 由于循环处理时，a元素会被文本节点覆盖，数量减少，只能从最大的开始处理，才能保证每个都执行到
     for ($i = $linkCount - 1; $i >= 0; $i--) {
         $link = $links->item($i);
-        // 不处理外链
         $url = $link->getAttribute('href');
+        // 不处理外链
         if (str_contains($url, 'http://') || str_contains($url, 'https://')) continue;
         // 已知类型, 方法,类静态方法..
-        // 处理方法
         $className = $link->getAttribute('class');
-        if ($className === 'function' || $className === 'methodname') {
-            $parent = $link->parentNode;
-            // 创建一个新的文本节点
-            $text = "{@link $link->textContent}"; // 拿到文本内容，并修改成 phpstorm 的连接
-            $textNode = $dom->createTextNode($text);
+        if ($className === 'function' || $className === 'methodname') {// a的class
             // 替换子节点
-            $parent->replaceChild($textNode, $link);
+            // 创建一个新的文本节点，拿到$link的文本内容，并修改成 phpstorm 的方法链接
+            $link->parentNode->replaceChild($dom->createTextNode("{@link $link->textContent}"), $link);
         } else {
-            // 如果未匹配到任何类型, 改成官网外链
-            // 网站外链为php 本地为html
+            // 如果未匹配到任何类型, 改成官网外链(网站外链为php/本地为html)
             $link->setAttribute('href', PHP_URL . str_replace('.html', '.php', $url));
         }
     }
@@ -112,7 +108,7 @@ function modifyUrl($element, $dom): void
  * @param $element
  * @param $dom
  */
-function handleStyle($element, $dom)
+function handleStyle($element, $dom): void
 {
     $tags = $element->getElementsByTagName('*');
     // 修改样式
