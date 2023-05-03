@@ -49,7 +49,7 @@ function run(): void
     $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
     while (false !== ($fileName = readdir($handle))) {
         // TODO 测试执行 class.mysqli 和 function.array 开头的文件
-        if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
+        // if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
         $filePath = PHP_PATH . $fileName;
         if (!is_file($filePath)) continue;
         $token = explode('.', $fileName)[0];
@@ -66,9 +66,10 @@ function run(): void
         handleStyle($element, $dom);
         // 重设代码颜色以便在黑色主题下查看
         $html = $dom->saveHTML($element);
-        // $html = preg_replace('/ *' . LINE . ' */', '', $html); // 内容转成1行
+        $html = preg_replace('/ *' . LINE . ' */', '', $html); // 内容转成1行
         $html = str_replace('#0000BB', '#9876AA', $html);
-        $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
+        $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+        $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
         $classFile = TEMP_PATH . $fileName;
         save_file($classFile, $html); // 文件保存到临时目录
     }
@@ -92,7 +93,7 @@ function modifyUrl($element, $dom): void
         if (str_contains($url, 'http://') || str_contains($url, 'https://')) continue;
         // 已知类型, 方法,类静态方法..
         $className = $link->getAttribute('class');
-        if ($className === 'function' || $className === 'methodname') {// a的class
+        if ($className === 'function' || $className === 'methodname' || strpos($link->textContent, '::') > 0) {
             // 替换子节点
             // 创建一个新的文本节点，拿到$link的文本内容，并修改成 phpstorm 的方法链接
             $link->parentNode->replaceChild($dom->createTextNode("{@link $link->textContent}"), $link);
