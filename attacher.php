@@ -71,7 +71,7 @@ function isConst($line): false|string
 function isVar($line): false|string
 {
     $line = str_replace(' ', '', $line);
-    $pre = "$";
+    $pre = '$';
     if (str_starts_with($line, $pre)) {
         $line = str_replace($pre, '', $line);
         $line = str_replace('_', '', $line);
