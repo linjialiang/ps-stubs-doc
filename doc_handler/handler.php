@@ -38,27 +38,27 @@ function run(): void
     if (!$handle) exit('目录打开失败');
     $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
     while (false !== ($fileName = readdir($handle))) {
-        if (is_file(IN_PATH . $fileName)) {
-            $tokens = explode('.', $fileName);
-            $filePath = IN_PATH . $fileName;
-            // 处理函数、类、保留字
-            if (in_array($tokens[0], $typeList)) {
-                $dom = new DOMDocument();
-                @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
-                $node = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
-                // 修改节点下链接
-                modifyUrl($node);
-                // 处理样式
-                handleStyle($node, $dom);
-                // 重设代码颜色以便在黑色主题下查看
-                $html = preg_replace('/ *' . LINE_BREAK . ' */', '', $dom->saveHTML($node)); // 内容转成1行
-                $html = str_replace('#0000BB', '#9876AA', $html);
-                $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
-                $classFile = TEMP_PATH . $fileName;
-                save_file(LOG_PATH . 'class.log', "$filePath" . LINE_BREAK, true);
-                save_file($classFile, $html); // 文件保存到临时目录
-            }
-        }
+        if (!is_file(IN_PATH . $fileName)) continue;
+        $tokens = explode('.', $fileName);
+        $filePath = IN_PATH . $fileName;
+        // 处理函数、类、保留字
+        if (!in_array($tokens[0], $typeList)) continue;
+        $dom = new DOMDocument();
+        @$dom->loadHTMLFile($filePath); // html文件载入DOM对象
+        $node = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需节点
+        if (empty($node)) continue;
+        // 修改节点下链接
+        modifyUrl($node, $dom);
+        // 处理样式
+        handleStyle($node, $dom);
+        // 重设代码颜色以便在黑色主题下查看
+        $html = $dom->saveHTML($node);
+        $html = preg_replace('/ *' . LINE_BREAK . ' */', '', $html); // 内容转成1行
+        $html = str_replace('#0000BB', '#9876AA', $html);
+        $html = str_replace('*/', '*\/', $html); // */ 不转义会导致phpstorm文档报错
+        $classFile = TEMP_PATH . $fileName;
+        save_file(LOG_PATH . 'class.log', "$filePath" . LINE_BREAK, true);
+        save_file($classFile, $html); // 文件保存到临时目录
     }
     closedir($handle);
 }
@@ -66,19 +66,32 @@ function run(): void
 /**
  * 修改链接
  * @param $node
+ * @param $dom
  */
-function modifyUrl($node): void
+function modifyUrl($node, $dom): void
 {
     $links = $node->getElementsByTagName('a');
     foreach ($links as $link) {
-        $href = $link->getAttribute('href');
         // 不处理外链
+        $href = $link->getAttribute('href');
         if (str_contains($href, 'http://')) continue;
         if (str_contains($href, 'https://')) continue;
         // 已知类型, 方法,类静态方法..
         $className = $link->getAttribute('class');
         if ($className === 'function' || $className === 'methodname') {
-            $link->setAttribute('href', "{@link {$link->textContent}}");
+            // 创建一个新的文本节点
+            $text = "{@link $link->textContent}"; // 拿到文本内容，并修改成 phpstorm 的连接
+            $childText = $dom->createTextNode($text);
+            // 拿到父节点
+            $parent = $link->parentNode;
+            // 替换子节点
+            $parent->replaceChild($childText, $link);
+            // // 在子节点之前插入
+            // $parent->insertBefore($childText, $link);
+            // // 移除a节点
+            // $parent->removeChild($link);
+            // unset($parent);
+            // unset($childText);
         } else {
             // 如果未匹配到任何类型, 改成官网外链
             // 网站外链为php 本地为html
