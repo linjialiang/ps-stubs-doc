@@ -12,7 +12,6 @@ const PS_PATH = __DIR__ . '/raw/phpstorm-stubs';
 
 function getComment($file, $oldComment = '', $prefix = '')
 {
-    return $oldComment;
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
     if (is_file($filePath)) {
@@ -91,18 +90,19 @@ function isComment(string $line): bool
 
 function handle($filePath): void
 {
-    $comment = ''; // 旧的注释
-    $content = ''; // 新的内容
-    $class = '';   // 类名
-    $handle = fopen($filePath, 'r');// 以只读方式打开一个文件
-    while (!feof($handle)) {// 函数检测是否已到达文件末尾
-        if ($line = fgets($handle)) {// 从文件指针中读取一行
-            $handleLine = trim($line); // 处理掉首尾空白的行
+    $fp = @fopen($filePath, 'r');
+    if ($fp) {
+        $class = '';   // 类名
+        $content = ''; // 新的内容
+        $comment = ''; // 旧的注释
+        // 以只读方式打开一个文件
+        while (false !== ($buffer = fgets($fp, 4096))) {// 从文件指针中读取一行
+            $ltrimBuffe1r = ltrim($buffer); // 处理掉行首空白的行
             if (empty($handleLine)) {
-                $content .= $line . PHP_EOL;
+                $content .= $buffer . PHP_EOL;
                 $comment = ''; // 所有空白行不会使用到注释，清空旧的注释
             } elseif (isComment($handleLine)) {// 拿到函数、方法、常量、类等的注释
-                $comment .= $line;
+                $comment .= $buffer;
                 // 注释需要后续处理，所以不需要增加新行
             } else {//
                 // ================ 处理注释 start ================ //
@@ -111,7 +111,7 @@ function handle($filePath): void
                     $newComment = getComment('class.' . $class, $comment);
                 } elseif ($function = isElement($handleLine, 'function')) {// 函数、类方法注释
                     if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
-                    $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
+                    $blankPre = str_starts_with($buffer, ' ');    // 前面空白是类方法的特征
                     $function = ($class && $blankPre) ? "$class.$function" : "function.$function";
                     $prefix = ($class && $blankPre) ? '    ' : '';
                     $newComment = getComment($function, $comment, $prefix);
@@ -122,12 +122,15 @@ function handle($filePath): void
                 }
                 // ================ 处理注释 end ================ //
                 $content .= $newComment ?? $comment;
-                $content .= $line . PHP_EOL;
+                $content .= $buffer . PHP_EOL;
                 $comment = '';    // 旧的注释已使用，清空旧的注释
             }
         }
+        // 函数检测是否已到达文件末尾
+        if (!feof($fp)) echo "$filePath Error: unexpected fgets() fail\n";
+        fclose($fp);
+        file_put_contents($filePath, $content);
     }
-    file_put_contents($filePath, $content);
 }
 
 /**
