@@ -10,12 +10,7 @@ const TEMP_PATH = __DIR__ . '/raw/temp/';
  */
 const PS_PATH = __DIR__ . '/raw/phpstorm-stubs';
 
-/**
- * 指定换行符
- */
-const LINE = "\n";
-
-function getComment($file, $oldComment = '')
+function getComment($file, $oldComment = '', $prefix = '')
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
@@ -23,23 +18,21 @@ function getComment($file, $oldComment = '')
         $keepLine = '';
         $keepLine2 = '';
         if ($oldComment) {
-            $olds = explode("\n", $oldComment);
-            $spaceLen = substr($olds[0], 0, (strlen($olds[0]) - strlen(ltrim($olds[0]))));
+            $olds = explode(PHP_EOL, $oldComment);
             foreach ($olds as $old) {
-                // 获取开头空格，一个方法只需要一次
                 $old2 = ltrim($old);
-                // 保留参数行
-                // 保留return行
+                // 保留 参数行 和 return行
                 if (str_starts_with($old2, '* @param') || str_starts_with($old2, '* @return')) {
-                    $keepLine .= LINE . strip_tags($old);
+                    $keepLine .= PHP_EOL . strip_tags($old);
                 } elseif (str_starts_with($old2, '#[')) {
-                    $keepLine2 .= LINE . strip_tags($old);
+                    $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
                 }
             }
         }
-        $spaceLen = $spaceLen ?? '';
         $comment = file_get_contents($filePath);
-        return "$spaceLen/**" . LINE . "$spaceLen * " . $comment . $keepLine . LINE . "$spaceLen */" . $keepLine2 . LINE;
+        $newComment = "$prefix/**" . PHP_EOL . "$prefix * " . $comment . $keepLine . PHP_EOL . "$prefix */";
+        if (empty($keepLine2)) $newComment .= $keepLine2 . PHP_EOL;
+        return $newComment;
     } else {
         return $oldComment;
     }
@@ -88,47 +81,52 @@ function isVar($line): false|string
 function isComment(string $line): bool
 {
     // TODO #[ 开头的有些是在注释下面，有些是在函数和方法里面，待解决
-    foreach (['/**', '* ', '*/', '#['] as $item) {
-        if (str_starts_with(trim($line), $item)) return true;
+    // foreach (['/**', '* ', '*/', '#['] as $item) {
+    foreach (['/**', '* ', '*/'] as $item) {
+        if (str_starts_with($line, $item)) return true;
     }
     return false;
 }
 
 function handle($filePath): void
 {
-    $oldComment = '';
-    $newContent = '';
-    $class = '';
+    $comment = ''; // 旧的注释
+    $content = ''; // 新的内容
+    $class = '';   // 类名
     $handle = fopen($filePath, 'r');// 以只读方式打开一个文件
     while (!feof($handle)) {// 函数检测是否已到达文件末尾
         if ($line = fgets($handle)) {// 从文件指针中读取一行
             $handleLine = trim($line); // 处理掉首尾空白的行
-            // 拿到函数、方法、常量等的注释
-            if (empty($handleLine)) continue;
-            if (isComment($line)) {
-                $oldComment .= $line;
-            } else {
-                // 注释转中文
-                if ($className = isElement($handleLine, 'class')) {// 类名+类名注释
+            if (empty($handleLine)) {
+                $content .= $line . PHP_EOL;
+                $comment = ''; // 所有空白行不会使用到注释，清空旧的注释
+            } elseif (isComment($handleLine)) {// 拿到函数、方法、常量、类等的注释
+                $comment .= $line;
+                // 注释需要后续处理，所以不需要增加新行
+            } else {//
+                // ================ 处理注释 start ================ //
+                if ($className = isElement($handleLine, 'class')) {// 类名注释
                     $class = $className;
-                    $newComment = getComment('class.' . $class, $oldComment);
-                } elseif ($function = isElement($handleLine, 'function')) {// 函数和类方法+注释
+                    $newComment = getComment('class.' . $class, $comment);
+                } elseif ($function = isElement($handleLine, 'function')) {// 函数、类方法注释
                     if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
                     $blankPre = str_starts_with($line, ' ');    // 前面空白是类方法的特征
-                    $function = $class && $blankPre ? $class . '.' . $function : 'function.' . $function;
-                    $newComment = getComment($function, $oldComment);
+                    $function = ($class && $blankPre) ? "$class.$function" : "function.$function";
+                    $prefix = ($class && $blankPre) ? '    ' : '';
+                    $newComment = getComment($function, $comment, $prefix);
                 } elseif ($const = isConst($handleLine)) {// 常量+注释
-                    $newComment = getComment('constant.' . $const, $oldComment);
+                    $newComment = getComment('constant.' . $const, $comment);
                 } elseif ($var = isVar($handleLine)) {// 预定义变量+注释
-                    $newComment = getComment('reserved.variables.' . $var, $oldComment);
+                    $newComment = getComment('reserved.variables.' . $var, $comment);
                 }
-                $newContent .= $newComment ?? $oldComment;
-                $newContent .= $line . LINE;
-                $oldComment = '';    // 注释已使用，清空
+                // ================ 处理注释 end ================ //
+                $content .= $newComment ?? $comment;
+                $content .= $line . PHP_EOL;
+                $comment = '';    // 旧的注释已使用，清空旧的注释
             }
         }
     }
-    file_put_contents($filePath, $newContent);
+    file_put_contents($filePath, $content);
 }
 
 /**
