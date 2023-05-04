@@ -10,32 +10,31 @@ const TEMP_PATH = __DIR__ . '/raw/temp/';
  */
 const PS_PATH = __DIR__ . '/raw/phpstorm-stubs';
 
-function getComment($file, $oldComment = '', $prefix = '')
+function getComment($file, $oldComment)
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
-    if (is_file($filePath)) {
+    if (is_file($filePath) && !empty($oldComment)) {
         $keepLine = '';
         $keepLine2 = '';
-        if ($oldComment) {
-            $olds = explode(PHP_EOL, $oldComment);
-            foreach ($olds as $old) {
-                $old2 = ltrim($old);
-                // 保留 参数行 和 return行
-                if (str_starts_with($old2, '* @param') || str_starts_with($old2, '* @return')) {
-                    $keepLine .= PHP_EOL . strip_tags($old);
-                } elseif (str_starts_with($old2, '#[')) {
-                    $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
-                }
+        $olds = explode(PHP_EOL, $oldComment);
+        $prefix = $olds[0] != ltrim($olds[0]) ?
+            '' : substr($olds[0], 0, strlen($olds[0]) - strlen(ltrim($olds[0])));
+        foreach ($olds as $old) {
+            $old2 = ltrim($old);
+            // 保留 参数行 和 return行
+            if (str_starts_with($old2, '* @param') || str_starts_with($old2, '* @return')) {
+                $keepLine .= PHP_EOL . strip_tags($old);
+            } elseif (str_starts_with($old2, '#[')) {
+                $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
             }
         }
         $comment = file_get_contents($filePath);
         $newComment = "$prefix/**" . PHP_EOL . "$prefix * " . $comment . $keepLine . PHP_EOL . "$prefix */";
-        if (empty($keepLine2)) $newComment .= $keepLine2 . PHP_EOL;
-        return $newComment;
-    } else {
-        return $oldComment;
+        if (!empty($keepLine2)) $newComment .= $keepLine2;
+        return $newComment . PHP_EOL;
     }
+    return $oldComment;
 }
 
 function isElement($buffer, $type): false|string
@@ -115,8 +114,7 @@ function handle($filePath): void
                     if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
                     $blankPre = str_starts_with($buffer, ' ');    // 前面空白是类方法的特征
                     $function = ($class && $blankPre) ? "$class.$function" : "function.$function";
-                    $prefix = ($class && $blankPre) ? '    ' : '';
-                    $newComment = getComment($function, $oldComment, $prefix);
+                    $newComment = getComment($function, $oldComment);
                 } elseif ($const = isConst($buffer_trim)) {// 常量+注释
                     $newComment = getComment('constant.' . $const, $oldComment);
                 } elseif ($var = isVar($buffer_trim)) {// 预定义变量+注释
