@@ -97,31 +97,31 @@ function handle($filePath): void
         $passMethod = false; // 是否到达函数、类方法，用于解决 #[ 在方法内部问题
         // 以只读方式打开一个文件
         while (false !== ($buffer = fgets($fp, 4096))) {// 从文件指针中读取一行，带换行符
-            $buffer_ltrim = ltrim($buffer); // 处理掉行首空白的行
-            if (empty($buffer_ltrim)) {
+            $buffer_trim = trim($buffer); // 处理掉行首空白的行
+            if (empty($buffer_trim)) {
                 $passMethod = false; // 遇到空行将 $passMethod 设为false
                 $content .= $buffer;
                 $oldComment = ''; // 所有空白行不会使用到注释，清空旧的注释
-            } elseif (isComment($buffer_ltrim, $passMethod)) {// 拿到函数、方法、常量、类等的注释
+            } elseif (isComment($buffer_trim, $passMethod)) {// 拿到函数、方法、常量、类等的注释
                 $oldComment .= $buffer;
                 // 注释需要后续处理，所以不需要增加新行
             } else {//
                 // ================ 处理注释 start ================ //
-                if ($className = isElement($buffer_ltrim, 'class')) {// 类名注释
+                if ($className = isElement($buffer_trim, 'class')) {// 类名注释
                     $class = $className;
                     $newComment = getComment('class.' . $class, $oldComment);
-                } elseif ($function = isElement($buffer_ltrim, 'function')) {// 函数、类方法注释
+                } elseif ($function = isElement($buffer_trim, 'function')) {// 函数、类方法注释
                     $passMethod = true;
                     if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
                     $blankPre = str_starts_with($buffer, ' ');    // 前面空白是类方法的特征
                     $function = ($class && $blankPre) ? "$class.$function" : "function.$function";
                     $prefix = ($class && $blankPre) ? '    ' : '';
                     $newComment = getComment($function, $oldComment, $prefix);
-                } elseif ($const = isConst($buffer_ltrim)) {// 常量+注释
+                } elseif ($const = isConst($buffer_trim)) {// 常量+注释
                     $newComment = getComment('constant.' . $const, $oldComment);
-                } elseif ($var = isVar($buffer_ltrim)) {// 预定义变量+注释
+                } elseif ($var = isVar($buffer_trim)) {// 预定义变量+注释
                     $newComment = getComment('reserved.variables.' . $var, $oldComment);
-                } elseif (str_starts_with($buffer_ltrim, ')')) {
+                } elseif (str_starts_with($buffer_trim, ')')) {
                     $passMethod = false; // 以 ')' 结尾代表一个方法结束
                 }
                 // ================ 处理注释 end ================ //
