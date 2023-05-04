@@ -12,6 +12,7 @@ const PS_PATH = __DIR__ . '/raw/phpstorm-stubs';
 
 function getComment($file, $oldComment = '', $prefix = '')
 {
+    return $oldComment;
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
     if (is_file($filePath)) {
