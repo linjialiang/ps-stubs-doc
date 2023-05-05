@@ -159,12 +159,16 @@ function handle($filePath): void
                 $oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
             } else {
                 // ================ 处理注释 start ================ //
-                if ($classInfo = isClass($buffer_trim)) {// 类名
+                if (false !== ($info = isClass($buffer_trim))) {// 类名
+                    $classInfo = $info;
+                    unset($info);
                     $newComment = getComment('class.' . $classInfo['name'], $oldComment);
-                } elseif ($methodInfo = isMethod($buffer_trim)) {// 函数名、类方法名
+                } elseif (false !== ($info = isMethod($buffer_trim))) {// 函数名、类方法名
+                    $methodInfo = $info;
+                    unset($info);
                     $function = str_starts_with($methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
                         substr($methodInfo['name'], 20) : $methodInfo['name'];
-                    $file = $methodInfo['prefix'] === 'function ' ?
+                    $file = $methodInfo['prefix'] === 'function' ?
                         "function.$function" : "{$classInfo['name']}.$function";
                     $newComment = getComment($file, $oldComment);
                 } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
@@ -187,10 +191,7 @@ function handle($filePath): void
         // 函数检测是否已到达文件末尾
         if (!feof($fp)) echo "$filePath Error: unexpected fgets() fail\n";
         fclose($fp);
-        // var_dump($content);die;
-        // var_dump($filePath);
         file_put_contents($filePath, $content);
-        // die;
     }
 }
 
