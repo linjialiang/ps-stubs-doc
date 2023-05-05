@@ -14,6 +14,7 @@ function getComment($file, $oldComment, $info)
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
+    $filePath = strtoupper($filePath);
     save_file(__DIR__ . '/file-path.log', $filePath . PHP_EOL, true);
     // if (is_file($filePath) && !empty($oldComment)) {
     if (is_file($filePath) && !empty($oldComment)) {
@@ -116,7 +117,10 @@ function isMethod($buffer): false|array
                 if ($value === 'function') {
                     $nextKey = $key + 1;
                     return !empty($tokens[$nextKey]) ?
-                        ['name' => explode('(', $tokens[$nextKey])[0], 'prefix' => $item] : false;
+                        [
+                            'name' => str_replace('--', '', explode('(', $tokens[$nextKey])[0]),
+                            'prefix' => $item
+                        ] : false;
                 }
             }
         }
