@@ -90,7 +90,7 @@ function modifyUrl($element, $dom): void
         if (str_contains($url, 'http://') || str_contains($url, 'https://')) continue;
         // 已知类型, 方法,类静态方法..
         $className = $link->getAttribute('class');
-        if ($className === 'function' || $className === 'methodname' || strpos($link->textContent, '::') > 0) {
+        if ($className === 'function' || $className === 'methodname' || strpos($link->textContent, '::')) {
             // 替换子节点
             // 创建一个新的文本节点，拿到$link的文本内容，并修改成 phpstorm 的方法链接
             $link->parentNode->replaceChild($dom->createTextNode("{@link $link->textContent}"), $link);
