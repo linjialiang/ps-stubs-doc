@@ -14,8 +14,9 @@ function getComment($file, $oldComment, $info)
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
+    save_file(__DIR__ . '/file-path.log', $filePath . PHP_EOL, true);
+    // if (is_file($filePath) && !empty($oldComment)) {
     if (is_file($filePath) && !empty($oldComment)) {
-        echo $filePath . PHP_EOL;
         $keepLine = '';
         $keepLine2 = '';
         $olds = explode(PHP_EOL, $oldComment);
@@ -68,7 +69,11 @@ function isClass($buffer): false|array
             foreach ($tokens as $key => $value) {
                 if (in_array($value, ['class', 'interface', 'trait'])) {
                     $nextKey = $key + 1;
-                    return !empty($tokens[$nextKey]) ? ['name' => $tokens[$nextKey], 'prefix' => $item] : false;
+                    return !empty($tokens[$nextKey]) ?
+                        [
+                            'name' => str_replace('--', '', explode('(', $tokens[$nextKey])[0]),
+                            'prefix' => $item
+                        ] : false;
                 }
             }
         }
@@ -110,7 +115,8 @@ function isMethod($buffer): false|array
             foreach ($tokens as $key => $value) {
                 if ($value === 'function') {
                     $nextKey = $key + 1;
-                    return !empty($tokens[$nextKey]) ? ['name' => $tokens[$nextKey], 'prefix' => $item] : false;
+                    return !empty($tokens[$nextKey]) ?
+                        ['name' => explode('(', $tokens[$nextKey])[0], 'prefix' => $item] : false;
                 }
             }
         }
