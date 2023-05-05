@@ -47,26 +47,28 @@ function run(): void
         // if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
         $filePath = PHP_PATH . $fileName;
         if (!is_file($filePath)) continue;
-        $token = explode('.', $fileName)[0];
+        $tokens = explode('.', $fileName);
         // 处理函数、类、保留字
-        if (!in_array($token, $typeList)) continue;
-        // html文件载入DOM对象
-        $dom = new DOM();
-        if (!@$dom->loadHTMLFile($filePath)) continue;
-        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素 DOMElement
-        if (empty($element)) continue;
-        // 修改节点下链接
-        modifyUrl($element, $dom);
-        // 处理样式
-        handleStyle($element, $dom);
-        // 重设代码颜色以便在黑色主题下查看
-        $html = $dom->saveHTML($element);
-        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
-        $html = str_replace('#0000BB', '#9876AA', $html);
-        $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
-        $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
-        $classFile = TEMP_PATH . $fileName;
-        save_file($classFile, $html); // 文件保存到临时目录
+        if (in_array($tokens[0], $typeList)) {
+            // html文件载入DOM对象
+            $dom = new DOM();
+            if (!@$dom->loadHTMLFile($filePath)) continue;
+            $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素 DOMElement
+            if (empty($element)) continue;
+            // 修改节点下链接
+            modifyUrl($element, $dom);
+            // 处理样式
+            handleStyle($element, $dom);
+            // 重设代码颜色以便在黑色主题下查看
+            $html = $dom->saveHTML($element);
+            $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+            $html = str_replace('#0000BB', '#9876AA', $html);
+            $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+            $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
+            $classFile = TEMP_PATH . $fileName;
+            save_file($classFile, $html); // 文件保存到临时目录
+        }
+        // 处理常量 先忽略
     }
     closedir($handle);
 }
