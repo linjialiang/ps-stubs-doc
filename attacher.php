@@ -10,31 +10,49 @@ const TEMP_PATH = __DIR__ . '/raw/temp/';
  */
 const PS_PATH = __DIR__ . '/raw/phpstorm-stubs';
 
-function getComment($file, $oldComment)
+function getComment($file, $oldComment, $info)
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
+    echo $filePath . PHP_EOL;
     if (is_file($filePath) && !empty($oldComment)) {
         $keepLine = '';
         $keepLine2 = '';
         $olds = explode(PHP_EOL, $oldComment);
-        $prefix = $olds[0] != ltrim($olds[0]) ?
-            '' : substr($olds[0], 0, strlen($olds[0]) - strlen(ltrim($olds[0])));
+        $prefix = $olds[0] === ltrim($olds[0]) ? '' :
+            substr($olds[0], 0, strlen($olds[0]) - strlen(ltrim($olds[0])));
         foreach ($olds as $old) {
-            $old2 = ltrim($old);
+            $old_ltrim = ltrim($old);
             // 保留 参数行 和 return行
-            if (str_starts_with($old2, '* @param') || str_starts_with($old2, '* @return')) {
+            if (str_starts_with($old_ltrim, '* @param') || str_starts_with($old_ltrim, '* @return')) {
                 $keepLine .= PHP_EOL . strip_tags($old);
-            } elseif (str_starts_with($old2, '#[')) {
+            } elseif (str_starts_with($old_ltrim, '#[')) {
                 $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
             }
         }
-        $comment = file_get_contents($filePath);
-        $newComment = "$prefix/**" . PHP_EOL . "$prefix * " . $comment . $keepLine . PHP_EOL . "$prefix */";
+        $html = file_get_contents($filePath);
+        $newComment = "$prefix/**" . PHP_EOL . "$prefix * " . $html . $keepLine . PHP_EOL . "$prefix */";
         if (!empty($keepLine2)) $newComment .= $keepLine2;
+        save_file(__DIR__ . '/new-comment.log', $newComment . PHP_EOL, true);
         return $newComment . PHP_EOL;
     }
+    save_file(__DIR__ . '/old-comment.log', $oldComment, true);
     return $oldComment;
+}
+
+
+/**
+ * 保存文件
+ * @param string $filePath
+ * @param string $content
+ * @param bool $isAppend 是否追加写入 默认false
+ * @return void
+ */
+function save_file(string $filePath, string $content, bool $isAppend = false): void
+{
+    $handle = fopen($filePath, $isAppend ? 'a+' : 'w+');
+    fwrite($handle, $content);
+    fclose($handle);
 }
 
 /**
@@ -162,15 +180,17 @@ function handle($filePath): void
                 if (false !== ($info = isClass($buffer_trim))) {// 类名
                     $classInfo = $info;
                     unset($info);
-                    $newComment = getComment('class.' . $classInfo['name'], $oldComment);
+                    // echo "{$classInfo['name']}|{$classInfo['prefix']}" . PHP_EOL;
+                    $newComment = getComment('class.' . $classInfo['name'], $oldComment, $classInfo);
                 } elseif (false !== ($info = isMethod($buffer_trim))) {// 函数名、类方法名
                     $methodInfo = $info;
                     unset($info);
+                    // echo "{$methodInfo['name']}|{$methodInfo['prefix']}" . PHP_EOL;
                     $function = str_starts_with($methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
                         substr($methodInfo['name'], 20) : $methodInfo['name'];
                     $file = $methodInfo['prefix'] === 'function' ?
                         "function.$function" : "{$classInfo['name']}.$function";
-                    $newComment = getComment($file, $oldComment);
+                    $newComment = getComment($file, $oldComment, $methodInfo);
                 } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
                     $methodInfo = false; // 以 ')' 结尾代表一个方法结束
                 }
