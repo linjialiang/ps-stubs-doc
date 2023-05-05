@@ -14,8 +14,8 @@ function getComment($file, $oldComment, $info)
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
-    echo $filePath . PHP_EOL;
     if (is_file($filePath) && !empty($oldComment)) {
+        echo $filePath . PHP_EOL;
         $keepLine = '';
         $keepLine2 = '';
         $olds = explode(PHP_EOL, $oldComment);
