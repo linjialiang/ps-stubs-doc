@@ -37,18 +37,70 @@ function getComment($file, $oldComment)
     return $oldComment;
 }
 
-function isElement($buffer, $type): false|string
+/**
+ * 验证类名 interface trait class
+ * @param $buffer
+ * @return false|array
+ */
+function isClass($buffer): false|array
 {
-    $tokens = explode(' ', $buffer);
-    foreach ($tokens as $k => $v) {
-        if ($v == $type && !empty($tokens[$k + 1])) {
-            $name = trim($tokens[($k + 1)]);
-            return strpos($name, '(') ? substr($name, 0, strpos($name, '(')) : $name;
+    foreach (['interface', 'trait', 'class', 'abstract class', 'final class'] as $item) {
+        if (str_starts_with($buffer, "$item ")) {// $item 结尾带空格
+            $tokens = explode(' ', $buffer);
+            foreach ($tokens as $key => $value) {
+                if (in_array($value, ['class', 'interface', 'trait'])) {
+                    $nextKey = $key + 1;
+                    return !empty($tokens[$nextKey]) ? ['name' => $tokens[$nextKey], 'prefix' => $item] : false;
+                }
+            }
         }
     }
     return false;
 }
 
+/**
+ * 验证函数名、方法名
+ * @param $buffer
+ * @return false|array
+ */
+function isMethod($buffer): false|array
+{
+    $list = [
+        'function',
+
+        'public function',
+        'abstract public function',
+        'public static function',
+        'final public function',
+        'final public static function',
+
+        'protected function',
+        'protected static function',
+        'abstract protected function',
+        // 'final protected function', // 没有
+        // 'final protected static function', // 没有
+
+        'private function',
+        // 'abstract private function', // 没有
+        'private static function',
+        'final private function',
+        'final private static function',
+    ];
+    foreach ($list as $item) {
+        if (str_starts_with($buffer, "$item ")) {// $item 结尾带空格
+            $tokens = explode(' ', $buffer);
+            foreach ($tokens as $key => $value) {
+                if ($value === 'function') {
+                    $nextKey = $key + 1;
+                    return !empty($tokens[$nextKey]) ? ['name' => $tokens[$nextKey], 'prefix' => $item] : false;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+// 暂不验证
 function isConst($buffer): false|string
 {
     $buffer = str_replace(' ', '', $buffer);
@@ -60,6 +112,7 @@ function isConst($buffer): false|string
     return false;
 }
 
+// 暂不验证
 function isVar($buffer): false|string
 {
     $buffer = str_replace(' ', '', $buffer);
@@ -75,57 +128,60 @@ function isVar($buffer): false|string
 /**
  * 验证是否是注释
  * @param string $buffer
- * @param bool $passMethod
+ * @param bool|array $methodInfo
  * @return bool
  */
-function isComment(string $buffer, bool $passMethod = false): bool
+function isComment(string $buffer, bool|array $methodInfo = false): bool
 {
     foreach (['/**', '* ', '*/'] as $item) {
         if (str_starts_with($buffer, $item)) return true;
     }
-    return str_starts_with($buffer, '#[') && !$passMethod;
+    return str_starts_with($buffer, '#[') && !$methodInfo;
 }
 
 function handle($filePath): void
 {
     $fp = @fopen($filePath, 'r');
     if ($fp) {
-        $class = '';   // 类名
+        $classInfo = false;   // 类名信息
+        $methodInfo = false;   // 函数、方法名信息
         $content = ''; // 新的内容
         $oldComment = ''; // 旧的注释
-        $passMethod = false; // 是否到达函数、类方法，用于解决 #[ 在方法内部问题
         // 以只读方式打开一个文件
         while (false !== ($buffer = fgets($fp, 4096))) {// 从文件指针中读取一行，带换行符
             $buffer_trim = trim($buffer); // 处理掉行首空白的行
             if (empty($buffer_trim)) {
-                $passMethod = false; // 遇到空行将 $passMethod 设为false
-                $content .= $buffer;
-                $oldComment = ''; // 所有空白行不会使用到注释，清空旧的注释
-            } elseif (isComment($buffer_trim, $passMethod)) {// 拿到函数、方法、常量、类等的注释
-                $oldComment .= $buffer;
-                // 注释需要后续处理，所以不需要增加新行
-            } else {//
+                $content .= $oldComment; // 可能存在旧的注释
+                $content .= $buffer;     // 保留空白行
+                $oldComment = '';        // 所有空白行不会使用到注释，清空旧的注释
+                $methodInfo = false;     // 遇到空行将 $passMethod 设为 false
+            } elseif (isComment($buffer_trim, $methodInfo)) {// 拿到函数、方法、类的注释
+                $oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
+            } else {
                 // ================ 处理注释 start ================ //
-                if ($className = isElement($buffer_trim, 'class')) {// 类名注释
-                    $class = $className;
-                    $newComment = getComment('class.' . $class, $oldComment);
-                } elseif ($function = isElement($buffer_trim, 'function')) {// 函数、类方法注释
-                    $passMethod = true;
-                    if (str_starts_with($function, 'PS_UNRESERVE_PREFIX_')) $function = substr($function, 20);
-                    $blankPre = str_starts_with($buffer, ' ');    // 前面空白是类方法的特征
-                    $function = ($class && $blankPre) ? "$class.$function" : "function.$function";
-                    $newComment = getComment($function, $oldComment);
-                } elseif ($const = isConst($buffer_trim)) {// 常量+注释
-                    $newComment = getComment('constant.' . $const, $oldComment);
-                } elseif ($var = isVar($buffer_trim)) {// 预定义变量+注释
-                    $newComment = getComment('reserved.variables.' . $var, $oldComment);
-                } elseif (str_starts_with($buffer_trim, ')')) {
-                    $passMethod = false; // 以 ')' 结尾代表一个方法结束
+                if ($classInfo = isClass($buffer_trim)) {// 类名
+                    $newComment = getComment('class.' . $classInfo['name'], $oldComment);
+                } elseif ($methodInfo = isMethod($buffer_trim)) {// 函数名、类方法名
+                    $function = str_starts_with($methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
+                        substr($methodInfo['name'], 20) : $methodInfo['name'];
+                    $file = $methodInfo['prefix'] === 'function ' ?
+                        "function.$function" : "{$classInfo['name']}.$function";
+                    $newComment = getComment($file, $oldComment);
+                } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
+                    $methodInfo = false; // 以 ')' 结尾代表一个方法结束
                 }
+                // elseif ($const = isConst($buffer_trim)) {// 常量
+                //
+                // } elseif ($var = isVar($buffer_trim)) {// 预定义变量
+                //
+                // } elseif (str_starts_with($buffer_trim, ')')) {//
+                //     $passMethod = false; // 以 ')' 结尾代表一个方法结束
+                // }
                 // ================ 处理注释 end ================ //
                 $content .= $newComment ?? $oldComment;
-                $content .= $buffer . PHP_EOL;
+                $content .= $buffer;
                 $oldComment = '';    // 旧的注释已使用，清空旧的注释
+                unset($newComment);  // 新的注释已使用，回收新的注释
             }
         }
         // 函数检测是否已到达文件末尾
