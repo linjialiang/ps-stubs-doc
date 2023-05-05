@@ -14,9 +14,7 @@ function getComment($file, $oldComment, $info)
 {
     // 不是常量替换下划线
     $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
-    $filePath = strtoupper($filePath);
-    save_file(__DIR__ . '/file-path.log', $filePath . PHP_EOL, true);
-    // if (is_file($filePath) && !empty($oldComment)) {
+    $filePath = strtolower($filePath); // 大写转小写
     if (is_file($filePath) && !empty($oldComment)) {
         $keepLine = '';
         $keepLine2 = '';
@@ -71,10 +69,7 @@ function isClass($buffer): false|array
                 if (in_array($value, ['class', 'interface', 'trait'])) {
                     $nextKey = $key + 1;
                     return !empty($tokens[$nextKey]) ?
-                        [
-                            'name' => str_replace('--', '', explode('(', $tokens[$nextKey])[0]),
-                            'prefix' => $item
-                        ] : false;
+                        ['name' => explode('(', $tokens[$nextKey])[0], 'prefix' => $item] : false;
                 }
             }
         }
@@ -190,12 +185,10 @@ function handle($filePath): void
                 if (false !== ($info = isClass($buffer_trim))) {// 类名
                     $classInfo = $info;
                     unset($info);
-                    // echo "{$classInfo['name']}|{$classInfo['prefix']}" . PHP_EOL;
                     $newComment = getComment('class.' . $classInfo['name'], $oldComment, $classInfo);
                 } elseif (false !== ($info = isMethod($buffer_trim))) {// 函数名、类方法名
                     $methodInfo = $info;
                     unset($info);
-                    // echo "{$methodInfo['name']}|{$methodInfo['prefix']}" . PHP_EOL;
                     $function = str_starts_with($methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
                         substr($methodInfo['name'], 20) : $methodInfo['name'];
                     $file = $methodInfo['prefix'] === 'function' ?
