@@ -33,10 +33,8 @@ function getComment($file, $oldComment, $info)
         $html = file_get_contents($filePath);
         $newComment = "$prefix/**" . PHP_EOL . "$prefix * " . $html . $keepLine . PHP_EOL . "$prefix */";
         if (!empty($keepLine2)) $newComment .= $keepLine2;
-        save_file(__DIR__ . '/new-comment.log', $newComment . PHP_EOL, true);
         return $newComment . PHP_EOL;
     }
-    save_file(__DIR__ . '/old-comment.log', $oldComment, true);
     return $oldComment;
 }
 
