@@ -59,12 +59,12 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    > - 使用 php7.4 正常执行
 
    ```shell
-   # 1. 进入文档处理程序目录
-   cd /server/www/php-doc/doc_handler/
-   # 2. 处理 php文档文件
-   /server/php/74/bin/php handler.php
-   # 3. 处理 phpstorm文档文件 
-   /server/php/74/bin/php attacher.php
+   # 1. 进入项目根目录
+   cd /server/www/php-doc/
+   # 2. 处理 php官方文档
+   php doc.php
+   # 3. 处理phpstorm-stubs 
+   php stubs.php
    ```
 
 4. 删除多于的文件
