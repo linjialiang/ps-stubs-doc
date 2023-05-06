@@ -64,7 +64,6 @@ class PsStubs
             if (is_dir($filePath)) { // 如果是目录，就进行递归获取文件
                 $this->run("$parent/$file");
             } elseif (str_ends_with($file, '.php')) {// 处理文件
-                var_dump($filePath);
                 $this->handle($filePath);
             }
         }
