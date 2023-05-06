@@ -13,7 +13,6 @@ declare (strict_types=1);
 namespace src;
 
 use DOMDocument;
-use DOMElement;
 use DOMException;
 
 class Handler
