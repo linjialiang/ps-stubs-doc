@@ -18,15 +18,20 @@ function getComment($file, $oldComment, $info)
     if (is_file($filePath) && !empty($oldComment)) {
         $keepLine = '';
         $keepLine2 = '';
+        $isAttribute = false;   // 注解，是否注解
         $olds = explode(PHP_EOL, $oldComment);
         $prefix = $olds[0] === ltrim($olds[0]) ? '' :
             substr($olds[0], 0, strlen($olds[0]) - strlen(ltrim($olds[0])));
         foreach ($olds as $old) {
-            $old_ltrim = ltrim($old);
+            $old_trim = trim($old);
             // 保留 参数行 和 return行
-            if (str_starts_with($old_ltrim, '* @param') || str_starts_with($old_ltrim, '* @return')) {
+            if ($isAttribute) {
+                $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
+                if (in_array($old_trim, [')]', '])]'])) $isAttribute = false;
+            } elseif (str_starts_with($old_trim, '* @param') || str_starts_with($old_trim, '* @return')) {
                 $keepLine .= PHP_EOL . strip_tags($old);
-            } elseif (str_starts_with($old_ltrim, '#[')) {
+            } elseif (str_starts_with($old_trim, '#[')) {
+                $isAttribute = true;
                 $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
             }
         }
