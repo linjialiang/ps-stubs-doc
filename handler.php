@@ -41,33 +41,32 @@ function run(): void
     if (!is_dir(TEMP_PATH)) mkdir(TEMP_PATH);
     // 开打php中文手册目录句柄
     if (!($handle = @opendir(PHP_PATH))) exit('目录打开失败');
-    $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
-    while (false !== ($fileName = readdir($handle))) {
+    // $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
+    while (false !== ($fileName = readdir($handle)) && is_file($fileName) && str_ends_with($fileName, '.html')) {
         // TODO 测试执行 class.mysqli 和 function.array 开头的文件
         // if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
-        $filePath = PHP_PATH . $fileName;
-        if (!is_file($filePath)) continue;
-        $tokens = explode('.', $fileName);
+        // $tokens = explode('.', $fileName);
         // 处理函数、类、保留字
-        if (in_array($tokens[0], $typeList)) {
-            // html文件载入DOM对象
-            $dom = new DOM();
-            if (!@$dom->loadHTMLFile($filePath)) continue;
-            $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素 DOMElement
-            if (empty($element)) continue;
-            // 修改节点下链接
-            modifyUrl($element, $dom);
-            // 处理样式
-            handleStyle($element, $dom);
-            // 重设代码颜色以便在黑色主题下查看
-            $html = $dom->saveHTML($element);
-            $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
-            $html = str_replace('#0000BB', '#9876AA', $html);
-            $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
-            $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
-            $classFile = TEMP_PATH . $fileName;
-            save_file($classFile, $html); // 文件保存到临时目录
-        }
+        // if (in_array($tokens[0], $typeList)) {
+        // html文件载入DOM对象
+        $dom = new DOM();
+        $filePath = PHP_PATH . $fileName;
+        if (!@$dom->loadHTMLFile($filePath)) continue;
+        $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素 DOMElement
+        if (empty($element)) continue;
+        // 修改节点下链接
+        modifyUrl($element, $dom);
+        // 处理样式
+        handleStyle($element, $dom);
+        // 重设代码颜色以便在黑色主题下查看
+        $html = $dom->saveHTML($element);
+        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+        $html = str_replace('#0000BB', '#9876AA', $html);
+        $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+        $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
+        $classFile = TEMP_PATH . $fileName;
+        save_file($classFile, $html); // 文件保存到临时目录
+        // }
         // 处理常量 先忽略
     }
     closedir($handle);
