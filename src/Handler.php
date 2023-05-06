@@ -13,6 +13,7 @@ declare (strict_types=1);
 namespace src;
 
 use DOMDocument;
+use DOMElement;
 use DOMException;
 
 class Handler
@@ -39,9 +40,9 @@ class Handler
     private DOMDocument $dom;
 
     /**
-     * @var object DOM元素
+     * @var DOMElement|null DOM元素
      */
-    private object $element;
+    private DOMElement|null $element;
 
     public function __construct()
     {
