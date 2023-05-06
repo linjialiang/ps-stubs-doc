@@ -16,7 +16,7 @@ use DOMDocument;
 use DOMElement;
 use DOMException;
 
-class Handler
+class PhpDoc
 {
     /**
      * PHP文档外链

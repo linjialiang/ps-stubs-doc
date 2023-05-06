@@ -10,14 +10,14 @@
 // +----------------------------------------------------------------------
 declare (strict_types=1);
 
-use src\Handler;
+use src\PhpDoc;
 
 /**
  * 引入 DOM 类
  */
-require __DIR__ . '/src/Handler.php';
+require __DIR__ . '/src/PhpDoc.php';
 
-$handler = new Handler();
+$handler = new PhpDoc();
 try {
     $handler->run();
 } catch (DOMException $e) {
