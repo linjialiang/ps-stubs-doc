@@ -64,10 +64,10 @@ class PsStubs
         if (!$handle) exit('目录打开失败');
         while (false !== ($file = readdir($handle))) {
             if ('..' === $file || '.' === $file) continue;  // 排除根目录
-            $filePath = self::PS_PATH . "/$file"; // 文件全路径
+            $filePath = self::PS_PATH . "$parent/$file"; // 文件全路径
             if (is_dir($filePath)) { // 如果是目录，就进行递归获取文件
                 $this->run("$parent/$file");
-            } elseif ('php' === substr(strrchr($file, '.'), 1)) {// 处理文件
+            } elseif (str_ends_with($file, '.php')) {// 处理文件
                 $this->handle($filePath);
             }
         }
