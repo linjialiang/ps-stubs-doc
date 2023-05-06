@@ -111,7 +111,7 @@ function isMethod($buffer): false|array
                     $nextKey = $key + 1;
                     return !empty($tokens[$nextKey]) ?
                         [
-                            'name' => str_replace('--', '', explode('(', $tokens[$nextKey])[0]),
+                            'name' => str_replace('__', '', explode('(', $tokens[$nextKey])[0]),
                             'prefix' => $item
                         ] : false;
                 }
