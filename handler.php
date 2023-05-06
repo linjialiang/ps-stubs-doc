@@ -42,7 +42,9 @@ function run(): void
     // 开打php中文手册目录句柄
     if (!($handle = @opendir(PHP_PATH))) exit('目录打开失败');
     // $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
-    while (false !== ($fileName = readdir($handle)) && is_file($fileName) && str_ends_with($fileName, '.html')) {
+    while (false !== ($fileName = readdir($handle))) {
+        $filePath = PHP_PATH . $fileName;
+        if (!is_file($filePath) || !str_ends_with($fileName, '.html')) continue;
         // TODO 测试执行 class.mysqli 和 function.array 开头的文件
         // if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
         // $tokens = explode('.', $fileName);
@@ -50,7 +52,6 @@ function run(): void
         // if (in_array($tokens[0], $typeList)) {
         // html文件载入DOM对象
         $dom = new DOM();
-        $filePath = PHP_PATH . $fileName;
         if (!@$dom->loadHTMLFile($filePath)) continue;
         $element = $dom->getElementById(substr($fileName, 0, strlen($fileName) - 5)); // 获取所需元素 DOMElement
         if (empty($element)) continue;
