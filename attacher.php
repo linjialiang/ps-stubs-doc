@@ -150,14 +150,19 @@ function isVar($buffer): false|string
  * 验证是否是注释
  * @param string $buffer
  * @param bool|array $methodInfo
- * @return bool
+ * @param bool|array $attributeInfo
+ * @return array|bool
  */
-function isComment(string $buffer, bool|array $methodInfo = false): bool
+function isComment(string $buffer, bool|array $methodInfo = false, bool|array $attributeInfo = false): array|bool
 {
     foreach (['/**', '*', '*/'] as $item) {
         if (str_starts_with($buffer, $item)) return true;
     }
-    return str_starts_with($buffer, '#[') && !$methodInfo;
+    if($attributeInfo) return true;
+    if (str_starts_with($buffer, '#[') && !$methodInfo) {
+        return !str_ends_with($buffer, ']') ? ['isAttribute' => true] : true;
+    }
+    return false;
 }
 
 function handle($filePath): void
@@ -166,6 +171,7 @@ function handle($filePath): void
     if ($fp) {
         $classInfo = false;   // 类名信息
         $methodInfo = false;   // 函数、方法名信息
+        $isAttribute = false;   // 注解，注释下的注解归入注释
         $content = ''; // 新的内容
         $oldComment = ''; // 旧的注释
         // 以只读方式打开一个文件
@@ -175,10 +181,12 @@ function handle($filePath): void
                 $content .= $oldComment; // 可能存在旧的注释
                 $content .= $buffer;     // 保留空白行
                 $oldComment = '';        // 所有空白行不会使用到注释，清空旧的注释
-                $methodInfo = false;     // 遇到空行将 $passMethod 设为 false
-            } elseif (isComment($buffer_trim, $methodInfo)) { // 拿到函数、方法、类的注释
+                $methodInfo = false;     // 遇到空行将 $methodInfo 设为 false
+                $isAttribute = false;     // 非注释将注解信息设为 false
+            } elseif (isComment($buffer_trim, $methodInfo, $isAttribute)) { // 拿到函数、方法、类的注释
                 $oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
             } else {
+                $isAttribute = false;     // 非注释将注解信息设为 false
                 // ================ 处理注释 start ================ //
                 if (false !== ($info = isClass($buffer_trim))) { // 类名
                     $classInfo = $info;
@@ -191,6 +199,9 @@ function handle($filePath): void
                         substr($methodInfo['name'], 20) : $methodInfo['name'];
                     $file = $methodInfo['prefix'] === 'function' ?
                         "function.$function" : "{$classInfo['name']}.$function";
+                    if ($function === 'assert_options') {
+                        echo $file . PHP_EOL;
+                    }
                     $newComment = getComment($file, $oldComment, $methodInfo);
                 } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
                     $methodInfo = false; // 以 ')' 结尾代表一个方法结束
