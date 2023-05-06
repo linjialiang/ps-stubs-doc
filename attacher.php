@@ -31,7 +31,7 @@ function getComment($file, $oldComment, $info)
             } elseif (str_starts_with($old_trim, '* @param') || str_starts_with($old_trim, '* @return')) {
                 $keepLine .= PHP_EOL . strip_tags($old);
             } elseif (str_starts_with($old_trim, '#[')) {
-                $isAttribute = true;
+                if (!str_ends_with($old_trim, ']')) $isAttribute = true;
                 $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
             }
         }
