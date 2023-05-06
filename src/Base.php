@@ -1,6 +1,6 @@
 <?php
 // +----------------------------------------------------------------------
-// | php-doc [ PHP is the best language for web programming ]
+// | php手册转phpstorm-stubs 基类
 // +----------------------------------------------------------------------
 // | Copyright (c) 2022-2023 linjialiang All rights reserved.
 // +----------------------------------------------------------------------
@@ -10,13 +10,21 @@
 // +----------------------------------------------------------------------
 declare (strict_types=1);
 
-namespace src;
-use DOMDocument;
+namespace core;
 
-class DOM extends DOMDocument
+class Base
 {
-    public function __construct(string $version = '1.0', string $encoding = 'utf-8')
+    /**
+     * 保存文件
+     * @param string $filePath
+     * @param string $content
+     * @param bool $isAppend 是否追加写入 默认false
+     * @return void
+     */
+    protected function save_file(string $filePath, string $content, bool $isAppend = false): void
     {
-        parent::__construct($version, $encoding);
+        $handle = fopen($filePath, $isAppend ? 'a+' : 'w+');
+        fwrite($handle, $content);
+        fclose($handle);
     }
 }
