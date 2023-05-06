@@ -202,9 +202,6 @@ function handle($filePath): void
                         substr($methodInfo['name'], 20) : $methodInfo['name'];
                     $file = $methodInfo['prefix'] === 'function' ?
                         "function.$function" : "{$classInfo['name']}.$function";
-                    if ($function === 'assert_options') {
-                        echo $file . PHP_EOL;
-                    }
                     $newComment = getComment($file, $oldComment, $methodInfo);
                 } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
                     $methodInfo = false; // 以 ')' 结尾代表一个方法结束
