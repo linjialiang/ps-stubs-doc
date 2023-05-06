@@ -42,9 +42,9 @@ function run(): void
     // 开打php中文手册目录句柄
     if (!($handle = @opendir(PHP_PATH))) exit('目录打开失败');
     // $typeList = ['function', 'class', 'reserved']; // 函数、类、保留字文件
-    while (false !== ($fileName = readdir($handle))) {
+    while (false !== ($fileName = readdir($handle)) && str_ends_with($fileName, '.html')) {
         $filePath = PHP_PATH . $fileName;
-        if (!is_file($filePath) || !str_ends_with($fileName, '.html')) continue;
+        if (!is_file($filePath)) continue;
         // TODO 测试执行 class.mysqli 和 function.array 开头的文件
         // if (!str_contains($fileName, 'class.mysqli') && !str_contains($fileName, 'function.array')) continue;
         // $tokens = explode('.', $fileName);
