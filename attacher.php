@@ -43,7 +43,6 @@ function getComment($file, $oldComment, $info)
     return $oldComment;
 }
 
-
 /**
  * 保存文件
  * @param string $filePath
