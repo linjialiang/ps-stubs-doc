@@ -155,12 +155,14 @@ function isVar($buffer): false|string
  */
 function isComment(string $buffer, bool|array $methodInfo = false, bool|array $attributeInfo = false): array|bool
 {
-    foreach (['/**', '*', '*/'] as $item) {
-        if (str_starts_with($buffer, $item)) return true;
-    }
-    if($attributeInfo) return true;
-    if (str_starts_with($buffer, '#[') && !$methodInfo) {
-        return !str_ends_with($buffer, ']') ? ['isAttribute' => true] : true;
+    if ($attributeInfo) {
+        return in_array($buffer, [')]', '])]']) ? ['isAttribute' => false] : true;
+    } else {
+        foreach (['/**', '*', '*/'] as $item) {
+            if (str_starts_with($buffer, $item)) return true;
+        }
+        if (str_starts_with($buffer, '#[') && !$methodInfo)
+            return !str_ends_with($buffer, ']') ? ['isAttribute' => true] : true;
     }
     return false;
 }
@@ -183,7 +185,8 @@ function handle($filePath): void
                 $oldComment = '';        // 所有空白行不会使用到注释，清空旧的注释
                 $methodInfo = false;     // 遇到空行将 $methodInfo 设为 false
                 $isAttribute = false;     // 非注释将注解信息设为 false
-            } elseif (isComment($buffer_trim, $methodInfo, $isAttribute)) { // 拿到函数、方法、类的注释
+            } elseif ($commentInfo = isComment($buffer_trim, $methodInfo, $isAttribute)) { // 拿到函数、方法、类的注释
+                if (is_array($commentInfo)) $isAttribute = $commentInfo['isAttribute'];
                 $oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
             } else {
                 $isAttribute = false;     // 非注释将注解信息设为 false
