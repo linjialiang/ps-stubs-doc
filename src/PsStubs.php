@@ -24,20 +24,126 @@ class PsStubs
      */
     private const PS_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 
+    /**
+     * @var array 类名信息
+     */
+    private array $classInfo = [];
+
+    /**
+     * @var array 函数、方法名信息
+     */
+    private array $methodInfo = [];
+
+    /**
+     * @var bool 注解，注释下的注解归入注释
+     */
+    private bool $isAttribute = false;
+
+    /**
+     * @var string 新的内容
+     */
+    private string $content = '';
+
+    /**
+     * @var string 旧的注释
+     */
+    private string $oldComment = '';
+
     public function __construct()
     {
     }
 
-    private function getComment($file, $oldComment, $info)
+    /**
+     * 递归获取所有目录
+     * @param string $parent 父级目录 /a/b/c.html
+     * @return void
+     */
+    public function run(string $parent = ''): void
+    {
+        $handle = @opendir(self::PS_PATH);
+        if (!$handle) exit('目录打开失败');
+        while (false !== ($file = readdir($handle))) {
+            if ('..' === $file || '.' === $file) continue;  // 排除根目录
+            $filePath = self::PS_PATH . "/$file"; // 文件全路径
+            if (is_dir($filePath)) { // 如果是目录，就进行递归获取文件
+                $this->run("$parent/$file");
+            } elseif ('php' === substr(strrchr($file, '.'), 1)) {// 处理文件
+                $this->handle($filePath);
+            }
+        }
+        closedir($handle);
+    }
+
+    /**
+     * 处理单个文件
+     * @param $filePath string 文件全路径
+     * @return void
+     */
+    private function handle(string $filePath): void
+    {
+        $fp = @fopen($filePath, 'r');
+        if ($fp) {
+            // 以只读方式打开一个文件
+            while (false !== ($buffer = fgets($fp, 4096))) { // 从文件指针中读取一行，带换行符
+                $buffer_trim = trim($buffer); // 处理掉行首空白的行
+                if (empty($buffer_trim)) {
+                    $this->content .= $this->oldComment; // 可能存在旧的注释
+                    $this->content .= $buffer;     // 保留空白行
+                    $this->oldComment = '';        // 所有空白行不会使用到注释，清空旧的注释
+                    $this->methodInfo = [];     // 遇到空行将 $methodInfo 设为 false
+                    $this->isAttribute = false;     // 非注释将注解信息设为 false
+                } elseif ($this->isComment($buffer_trim)) { // 拿到函数、方法、类的注释
+                    $this->oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
+                } else {
+                    $this->isAttribute = false;     // 非注释将注解信息设为 false
+                    // ================ 处理注释 start ================ //
+                    if ($this->isClass($buffer_trim)) { // 类名
+                        $newComment = $this->getComment('class.' . $this->classInfo['name']);
+                    } elseif ($this->isMethod($buffer_trim)) { // 函数名、类方法名
+                        $function = str_starts_with($this->methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
+                            substr($this->methodInfo['name'], 20) : $this->methodInfo['name'];
+                        $file = $this->methodInfo['prefix'] === 'function' ?
+                            "function.$function" : "{$this->classInfo['name']}.$function";
+                        $newComment = $this->getComment($file);
+                    } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
+                        $this->methodInfo = []; // 以 ')' 结尾代表一个方法结束
+                    }
+                    // elseif ($const = isConst($buffer_trim)) {// 常量
+                    //
+                    // } elseif ($var = isVar($buffer_trim)) {// 预定义变量
+                    //
+                    // } elseif (str_starts_with($buffer_trim, ')')) {//
+                    //     $passMethod = false; // 以 ')' 结尾代表一个方法结束
+                    // }
+                    // ================ 处理注释 end ================ //
+                    $this->content .= $newComment ?? $this->oldComment;
+                    $this->content .= $buffer;
+                    $this->oldComment = '';    // 旧的注释已使用，清空旧的注释
+                    unset($newComment);  // 新的注释已使用，回收新的注释
+                }
+            }
+            // 函数检测是否已到达文件末尾
+            if (!feof($fp)) echo "$filePath Error: unexpected fgets() fail\n";
+            fclose($fp);
+            file_put_contents($filePath, $this->content);
+        }
+    }
+
+    /**
+     * 获取新的注释
+     * @param string $file 文件名称
+     * @return string
+     */
+    private function getComment(string $file): string
     {
         // 不是常量替换下划线
         $filePath = self::TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
         $filePath = strtolower($filePath); // 大写转小写
-        if (is_file($filePath) && !empty($oldComment)) {
+        if (is_file($filePath) && !empty($this->oldComment)) {
             $keepLine = '';
             $keepLine2 = '';
             $isAttribute = false;   // 注解，是否注解
-            $olds = explode(PHP_EOL, $oldComment);
+            $olds = explode(PHP_EOL, $this->oldComment);
             $prefix = $olds[0] === ltrim($olds[0]) ? '' :
                 substr($olds[0], 0, strlen($olds[0]) - strlen(ltrim($olds[0])));
             foreach ($olds as $old) {
@@ -58,29 +164,15 @@ class PsStubs
             if (!empty($keepLine2)) $newComment .= $keepLine2;
             return $newComment . PHP_EOL;
         }
-        return $oldComment;
-    }
-
-    /**
-     * 保存文件
-     * @param string $filePath
-     * @param string $content
-     * @param bool $isAppend 是否追加写入 默认false
-     * @return void
-     */
-    private function save_file(string $filePath, string $content, bool $isAppend = false): void
-    {
-        $handle = fopen($filePath, $isAppend ? 'a+' : 'w+');
-        fwrite($handle, $content);
-        fclose($handle);
+        return $this->oldComment;
     }
 
     /**
      * 验证类名 interface trait class
      * @param $buffer
-     * @return false|array
+     * @return bool
      */
-    private function isClass($buffer): false|array
+    private function isClass($buffer): bool
     {
         foreach (['interface', 'trait', 'class', 'abstract class', 'final class'] as $item) {
             if (str_starts_with($buffer, "$item ")) { // $item 结尾带空格
@@ -88,8 +180,14 @@ class PsStubs
                 foreach ($tokens as $key => $value) {
                     if (in_array($value, ['class', 'interface', 'trait'])) {
                         $nextKey = $key + 1;
-                        return !empty($tokens[$nextKey]) ?
-                            ['name' => explode('(', $tokens[$nextKey])[0], 'prefix' => $item] : false;
+                        if (!empty($tokens[$nextKey])) {
+                            $this->classInfo = [
+                                'name' => explode('(', $tokens[$nextKey])[0],
+                                'prefix' => $item
+                            ];
+                            return true;
+                        }
+                        return false;
                     }
                 }
             }
@@ -100,9 +198,9 @@ class PsStubs
     /**
      * 验证函数名、方法名
      * @param $buffer
-     * @return false|array
+     * @return bool
      */
-    private function isMethod($buffer): false|array
+    private function isMethod($buffer): bool
     {
         $list = [
             'function',
@@ -131,11 +229,14 @@ class PsStubs
                 foreach ($tokens as $key => $value) {
                     if ($value === 'function') {
                         $nextKey = $key + 1;
-                        return !empty($tokens[$nextKey]) ?
-                            [
+                        if (!empty($tokens[$nextKey])) {
+                            $this->methodInfo = [
                                 'name' => str_replace('__', '', explode('(', $tokens[$nextKey])[0]),
                                 'prefix' => $item
-                            ] : false;
+                            ];
+                            return true;
+                        }
+                        return false;
                     }
                 }
             }
@@ -171,103 +272,24 @@ class PsStubs
     /**
      * 验证是否是注释
      * @param string $buffer
-     * @param bool|array $methodInfo
-     * @param bool|array $attributeInfo
-     * @return array|bool
+     * @return bool
      */
-    private function isComment(string $buffer, bool|array $methodInfo = false, bool|array $attributeInfo = false): array|bool
+    private function isComment(string $buffer): bool
     {
-        if ($attributeInfo) {
-            return in_array($buffer, [')]', '])]']) ? ['isAttribute' => false] : true;
+        if ($this->isAttribute) {
+            if (in_array($buffer, [')]', '])]'])) $this->isAttribute = false;
+            return true;
         } else {
             foreach (['/**', '*', '*/'] as $item) {
                 if (str_starts_with($buffer, $item)) return true;
             }
-            if (str_starts_with($buffer, '#[') && !$methodInfo)
-                return !str_ends_with($buffer, ']') ? ['isAttribute' => true] : true;
+            if (str_starts_with($buffer, '#[') && !$this->methodInfo) {
+                if (!str_ends_with($buffer, ']')) $this->isAttribute = true;
+                return true;
+            }
         }
         return false;
     }
 
-    private function handle($filePath): void
-    {
-        $fp = @fopen($filePath, 'r');
-        if ($fp) {
-            $classInfo = false;   // 类名信息
-            $methodInfo = false;   // 函数、方法名信息
-            $isAttribute = false;   // 注解，注释下的注解归入注释
-            $content = ''; // 新的内容
-            $oldComment = ''; // 旧的注释
-            // 以只读方式打开一个文件
-            while (false !== ($buffer = fgets($fp, 4096))) { // 从文件指针中读取一行，带换行符
-                $buffer_trim = trim($buffer); // 处理掉行首空白的行
-                if (empty($buffer_trim)) {
-                    $content .= $oldComment; // 可能存在旧的注释
-                    $content .= $buffer;     // 保留空白行
-                    $oldComment = '';        // 所有空白行不会使用到注释，清空旧的注释
-                    $methodInfo = false;     // 遇到空行将 $methodInfo 设为 false
-                    $isAttribute = false;     // 非注释将注解信息设为 false
-                } elseif ($commentInfo = isComment($buffer_trim, $methodInfo, $isAttribute)) { // 拿到函数、方法、类的注释
-                    if (is_array($commentInfo)) $isAttribute = $commentInfo['isAttribute'];
-                    $oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
-                } else {
-                    $isAttribute = false;     // 非注释将注解信息设为 false
-                    // ================ 处理注释 start ================ //
-                    if (false !== ($info = isClass($buffer_trim))) { // 类名
-                        $classInfo = $info;
-                        unset($info);
-                        $newComment = getComment('class.' . $classInfo['name'], $oldComment, $classInfo);
-                    } elseif (false !== ($info = isMethod($buffer_trim))) { // 函数名、类方法名
-                        $methodInfo = $info;
-                        unset($info);
-                        $function = str_starts_with($methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
-                            substr($methodInfo['name'], 20) : $methodInfo['name'];
-                        $file = $methodInfo['prefix'] === 'function' ?
-                            "function.$function" : "{$classInfo['name']}.$function";
-                        $newComment = getComment($file, $oldComment, $methodInfo);
-                    } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
-                        $methodInfo = false; // 以 ')' 结尾代表一个方法结束
-                    }
-                    // elseif ($const = isConst($buffer_trim)) {// 常量
-                    //
-                    // } elseif ($var = isVar($buffer_trim)) {// 预定义变量
-                    //
-                    // } elseif (str_starts_with($buffer_trim, ')')) {//
-                    //     $passMethod = false; // 以 ')' 结尾代表一个方法结束
-                    // }
-                    // ================ 处理注释 end ================ //
-                    $content .= $newComment ?? $oldComment;
-                    $content .= $buffer;
-                    $oldComment = '';    // 旧的注释已使用，清空旧的注释
-                    unset($newComment);  // 新的注释已使用，回收新的注释
-                }
-            }
-            // 函数检测是否已到达文件末尾
-            if (!feof($fp)) echo "$filePath Error: unexpected fgets() fail\n";
-            fclose($fp);
-            file_put_contents($filePath, $content);
-        }
-    }
 
-    /**
-     * 递归获取所有目录
-     * @param string $parent 父级目录 /a/b/c.html
-     * @param string $dirPath
-     * @return void
-     */
-    public function run(string $parent = '', string $dirPath = self::PS_PATH): void
-    {
-        $handle = @opendir($dirPath);
-        if (!$handle) exit('目录打开失败');
-        while (false !== ($file = readdir($handle))) {
-            if ('..' === $file || '.' === $file) continue;  // 排除根目录
-            $filePath = "$dirPath/$file"; // 文件全路径
-            if (is_dir($filePath)) { // 如果是目录，就进行递归获取文件
-                run("$parent/$file", $filePath);
-            } elseif ('php' === substr(strrchr($file, '.'), 1)) { // 处理文件
-                handle($filePath);
-            }
-        }
-        closedir($handle);
-    }
 }
