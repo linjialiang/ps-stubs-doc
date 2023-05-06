@@ -1,22 +1,20 @@
 ## 介绍
 
-源码从 https://github.com/fw6669998/php-doc/ 拷贝，代码做过修复，以适合 `phpstorm-stubs-2023.2.3` 
+项目基于 php8.2 开发，功能是将PHP官方手册内容加入 `phpstorm-stubs`
 
 下面是文档具体制作过程：
 
 ## 1. 下载PHP对应语言文档
 
-根据自己使用的语言下载文档
-
-PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributions/manual/php_manual_zh.tar.gz)
+根据自己使用的语言下载文档，这里使用[PHP中文文档](https://www.php.net/distributions/manual/php_manual_zh.tar.gz)
 
 > 注意：下载时，下载多页面( `Many HTML files` )版本
 
-## 2. 下载PhpStorm默认文档
+## 2. 下载 PhpStorm-stubs
 
-需要下载 PhpStorm 官方默认文档进行处理，文档需根据自己安装的phpstorm版本下载对应的phpstorm文档版本
+需要下载 PhpStorm 官方默认的 [PhpStorm-stubs](https://github.com/JetBrains/phpstorm-stubs/releases) 进行增量处理
 
-> phpstorm 官方文档下载地址：[phpstorm-stubs/releases](https://github.com/JetBrains/phpstorm-stubs/releases)
+> 注意：对于 `PhpStorm-stubs` 低版本，需根据phpstorm版本下载github上对应的标签，较新版本使用master分支即可
 
 ## 3. 处理文档
 
@@ -27,15 +25,11 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    ```shell
    # 1. 进入项目根目录
    cd /server/www/php-doc/raw/
-   # 2.1 移动 php 文档
-   mv path/php_manual_zh.tar.gz ./
-   # 2.2 移动 phpStorm 文档
-   mv path/phpstorm-stubs-2022.3.tar.gz ./
-   # 3. 解压
+   # 2. 解压PHP手册，得到 php-chunked-xhtml 目录
    tar -xzf php_manual_zh.tar.gz
-   mv ./php_manual_zh/php-chunked-xhtml ./php-chunked-xhtml
-   tar -xzf phpstorm-stubs-2022.3.tar.gz
-   mv phpstorm-stubs-2022.3/ phpstorm-stubs/
+   # 3. 解压 phpstorm-stubs 
+   unzip phpstorm-stubs-master.zip
+   mv phpstorm-stubs-master/ phpstorm-stubs/
    ```
 
    > 解压得到文件夹：
@@ -54,10 +48,6 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
 
 3. 进行文档处理
 
-   > 注意：推荐使用 php7.x 版本，亲测：
-   > - 使用 php8.2 会打印非常多的警告
-   > - 使用 php7.4 正常执行
-
    ```shell
    # 1. 进入项目根目录
    cd /server/www/php-doc/
@@ -66,6 +56,8 @@ PHP中文文档下载地址：[php_ma****nual_zh](https://www.php.net/distributi
    # 3. 处理phpstorm-stubs 
    php stubs.php
    ```
+
+   > 提示：项目基于php8.2开发，推荐使用 php8.2 版本来批处理
 
 4. 删除多于的文件
 
