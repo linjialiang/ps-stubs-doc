@@ -22,17 +22,17 @@ class PhpDoc
      * PHP文档外链
      * 也可设为本地链接 例: file:///D:/temp/php-chunked-xhtml/
      */
-    const PHP_URL = 'https://www.php.net/manual/zh/';
+    private const PHP_URL = 'https://www.php.net/manual/zh/';
 
     /**
      * php文档手册目录
      */
-    const PHP_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
+    private const PHP_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
 
     /**
      * 临时文件存放目录
      */
-    const TEMP_PATH = __DIR__ . '/../raw/temp/';
+    private const TEMP_PATH = __DIR__ . '/../raw/temp/';
 
     /**
      * @var DOMDocument DOM对象

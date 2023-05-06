@@ -17,9 +17,9 @@ use src\PhpDoc;
  */
 require __DIR__ . '/src/PhpDoc.php';
 
-$handler = new PhpDoc();
+$handle = new PhpDoc();
 try {
-    $handler->run();
+    $handle->run();
 } catch (DOMException $e) {
     echo $e->getMessage() . PHP_EOL;
 }

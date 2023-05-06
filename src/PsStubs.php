@@ -17,22 +17,21 @@ class PsStubs
     /**
      * 临时文件存放目录
      */
-    const TEMP_PATH = __DIR__ . '/../raw/temp/';
+    private const TEMP_PATH = __DIR__ . '/../raw/temp/';
 
     /**
      * phpstorm-stubs 目录
      */
-    const PS_PATH = __DIR__ . '/../raw/phpstorm-stubs';
+    private const PS_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 
     public function __construct()
     {
     }
 
-
     private function getComment($file, $oldComment, $info)
     {
         // 不是常量替换下划线
-        $filePath = TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
+        $filePath = self::TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
         $filePath = strtolower($filePath); // 大写转小写
         if (is_file($filePath) && !empty($oldComment)) {
             $keepLine = '';
@@ -256,7 +255,7 @@ class PsStubs
      * @param string $dirPath
      * @return void
      */
-    public function run(string $parent = '', string $dirPath = PS_PATH): void
+    public function run(string $parent = '', string $dirPath = self::PS_PATH): void
     {
         $handle = @opendir($dirPath);
         if (!$handle) exit('目录打开失败');
@@ -271,5 +270,4 @@ class PsStubs
         }
         closedir($handle);
     }
-
 }
