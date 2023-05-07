@@ -45,9 +45,9 @@ class PsStubs
     private array $methodInfo;
 
     /**
-     * @var string 变量信息
+     * @var array 变量信息
      */
-    private string $varInfo;
+    private array $varInfo;
 
 
     /**
@@ -110,9 +110,9 @@ class PsStubs
                         $newComment = $this->getComment($file);
                     } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
                         $this->methodInfo = []; // 以 ')' 结尾代表一个方法结束
-                    } elseif ($this->isVar($buffer_trim)) {
-                        $newComment = $this->getComment('reserved.variables.' . $this->varInfo);
-                        $this->varInfo = '';  // 变量只有一行，所以干完活就可以清空
+                    } elseif ($this->isVar($buffer_trim)) {// 处理预定义变量，就几个
+                        $newComment = $this->getComment('reserved.variables.' . $this->varInfo['file_name']);
+                        $this->varInfo = [];  // 变量只有一行，所以干完活就可以清空
                     }
                     // elseif ($const = isConst($buffer_trim)) {// 常量
                     //
@@ -145,7 +145,7 @@ class PsStubs
         $this->oldComment = '';
         $this->classInfo = [];
         $this->methodInfo = [];
-        $this->varInfo = '';
+        $this->varInfo = [];
         $this->isAttribute = false;
     }
 
@@ -292,13 +292,15 @@ class PsStubs
     /**
      * 验证预定义常量
      * @param string $buffer
-     * @return false|string
+     * @return bool
      */
-    private function isVar(string $buffer): false|string
+    private function isVar(string $buffer): bool
     {
         $prefix = '$';
         if (str_starts_with($buffer, $prefix)) {
-            $this->varInfo = str_replace([$prefix, '_'], '', explode(' ', $buffer)[0]);
+            $var = str_replace([$prefix, '_'], '', explode(' ', $buffer)[0]);
+            $diffList = ['COOKIE' => 'cookies', 'ENV' => 'environment'];
+            $this->varInfo = ['real_name' => $var, 'file_name' => $diffList[$var] ?? $var];
             return true;
         }
         return false;
