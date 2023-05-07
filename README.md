@@ -17,7 +17,7 @@
 
 需要下载 PhpStorm 官方默认的 [PhpStorm-stubs](https://github.com/JetBrains/phpstorm-stubs/releases) 进行增量处理
 
-> 注意：对于 `PhpStorm-stubs` 低版本，需根据phpstorm版本下载github上对应的标签，较新版本使用master分支即可
+> 注意：对于 `PhpStorm-stubs` 低版本，需根据 PhpStorm 版本下载 github 上对应的标签，较新版本使用 master 分支即可
 
 ## 3. 处理文档
 
@@ -90,17 +90,13 @@
    英文菜单栏操作：phpStorm -> project -> External Libraries -> 右键 -> Configure PHP Runtime -> Advanced Setting ->
    Default Stub Paths -> 选择刚刚的 `phpstorm-stubs` 所在目录 -> 应用，确认 -> 等待加载IDE索引 -> 重启 IDE
 
-   ![image-20221212115821796](assets/image-20221212115821796.png)
-
-   ![image-20221212120046309](assets/image-20221212120046309.png)
+   ![image-20221212115821796](assets/01.png)
 
 3. 排除 `symfony` 的扩展文件
 
-   > 如果你的php版本已经是 `8.1+ ` 无需使用 `symfony` 的扩展文件，否则 `phpStorm` 无法识别该采用那个文档
+   > 如果你的 PHP 是最新版则无需使用 symfony 的 `polyfill 扩展`，否则 PhpStorm 无法识别该采用那个文档
 
-   ![image-20221212121502148](assets/image-20221212121502148.png)
-
-   ![image-20221212180147368](assets/image-20221212180147368.png)
+   ![image-20221212121502148](assets/03.png)
 
 4. 检查
 
@@ -110,6 +106,4 @@
    array_is_list()
    ```
 
-   ![image-20221212120443182](assets/image-20221212120443182.png)
-
-   ![image-20221212121235536](assets/image-20221212121235536.png)
+   ![image-20221212120443182](assets/02.png)
