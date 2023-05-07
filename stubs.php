@@ -18,8 +18,4 @@ use src\PsStubs;
 require __DIR__ . '/src/PsStubs.php';
 
 $handle = new PsStubs();
-try {
-    $handle->run();
-} catch (DOMException $e) {
-    echo $e->getMessage() . PHP_EOL;
-}
+$handle->run();

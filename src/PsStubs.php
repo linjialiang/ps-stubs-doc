@@ -72,7 +72,7 @@ class PsStubs
 
     /**
      * 处理单个文件
-     * @param $filePath string 文件全路径
+     * @param string $filePath 文件全路径
      * @return void
      */
     private function handle(string $filePath): void
@@ -179,10 +179,10 @@ class PsStubs
 
     /**
      * 验证类名 interface trait class
-     * @param $buffer
+     * @param string $buffer
      * @return bool
      */
-    private function isClass($buffer): bool
+    private function isClass(string $buffer): bool
     {
         foreach (['interface', 'trait', 'class', 'abstract class', 'final class'] as $item) {
             if (str_starts_with($buffer, "$item ")) { // $item 结尾带空格
@@ -207,10 +207,10 @@ class PsStubs
 
     /**
      * 验证函数名、方法名
-     * @param $buffer
+     * @param string $buffer
      * @return bool
      */
-    private function isMethod($buffer): bool
+    private function isMethod(string $buffer): bool
     {
         $list = [
             'function',
