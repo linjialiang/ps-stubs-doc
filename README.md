@@ -2,7 +2,7 @@
 
 项目基于 php8.2 开发，功能是将PHP官方手册内容加入 `phpstorm-stubs`
 
-> 实现部分：所有类、接口、特性、方法、函数
+> 实现部分：类名、接口名、特性名、方法、函数
 > 未实行部分：预定义变量、常量、属性
 
 下面是文档具体制作过程：
@@ -42,11 +42,18 @@
    php-chunked-xhtml        -- php官方文档
    ```
 
-2. 修改文件常量
+2. 删除多于的文件
 
-   ```php
-   # doc_handler/attacher.php 中常用 docOut 改成phpstorm对应版本文档的路径
-   const docOut = __DIR__ . '/../raw/phpstorm-stubs/';
+   ```shell
+   # phpstorm-stubs/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
+   # 查看目录下，把 非目录的文件 删除即可
+   cd /server/www/php-doc/raw/phpstorm-stubs/
+   # Linux
+   ls -a --file-type | grep -v /$ | xargs rm -f
+   rm -rf .github/ .idea/
+   cd ../
+   mv phpstorm-stubs/ phpstorm-stubs-zh/
+   tar -cJf phpstorm-stubs-zh.tar.xz phpstorm-stubs-zh/
    ```
 
 3. 进行文档处理
@@ -62,20 +69,6 @@
 
    > 提示：项目基于php8.2开发，推荐使用 php8.2 版本来批处理
 
-4. 删除多于的文件
-
-   ```shell
-   # phpstorm-stubs/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
-   # 查看目录下，把 非目录的文件 删除即可
-   cd /server/www/php-doc/raw/phpstorm-stubs/
-   # Linux
-   ls -a --file-type | grep -v /$ | xargs rm -f
-   rm -rf .github/ .idea/
-   cd ../
-   mv phpstorm-stubs/ phpstorm-stubs-zh/
-   tar -cJf phpstorm-stubs-zh.tar.xz phpstorm-stubs-zh/
-   ```
-
 ## 5. 文档引入phpstorm
 
 经过处理的文档目录 `phpstorm-stubs` 已经是 `ok` 的 PhpStorm中文文档，但是还需要安装进去 `PhpStorm`
@@ -84,7 +77,7 @@
 
 1. 保存文档目录
 
-   注意：最好把 `phpstorm-stubs/` 移至一个可保存不变动的目录，并且目录必须保持全英文路径，避免不必要的麻烦**
+   注意：最好把 `phpstorm-stubs` 移至一个可保存不变动的目录，并且目录必须保持全英文路径，避免不必要的麻烦**
 
 2. 设置引入目录
 
@@ -109,7 +102,7 @@
 
    ![image-20221212180147368](assets/image-20221212180147368.png)
 
-3. 检查
+4. 检查
 
    ```php
    // 在 php 文件编写系统函数，然后把鼠标移到该函数上，注释就会出来，看看是不是已经是中文版本文档
@@ -120,5 +113,3 @@
    ![image-20221212120443182](assets/image-20221212120443182.png)
 
    ![image-20221212121235536](assets/image-20221212121235536.png)
-   
-   
