@@ -45,6 +45,12 @@ class PsStubs
     private array $methodInfo;
 
     /**
+     * @var string 变量信息
+     */
+    private string $varInfo;
+
+
+    /**
      * @var bool 注解，注释下的注解归入注释
      */
     private bool $isAttribute;
@@ -87,7 +93,7 @@ class PsStubs
                     $this->content .= $this->oldComment; // 可能存在旧的注释
                     $this->content .= $buffer;           // 保留空白行
                     $this->oldComment = '';              // 所有空白行不会使用到注释，清空旧的注释
-                    $this->methodInfo = [];              // 遇到空行将 $methodInfo 设为 false
+                    $this->methodInfo = [];              // 遇到空行将 methodInfo 设为 []
                     $this->isAttribute = false;          // 非注释将注解信息设为 false
                 } elseif ($this->isComment($buffer_trim)) {// 拿到函数、方法、类的注释
                     $this->oldComment .= $buffer; // 注释需要后续处理，所以不需要增加新行
@@ -104,6 +110,9 @@ class PsStubs
                         $newComment = $this->getComment($file);
                     } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
                         $this->methodInfo = []; // 以 ')' 结尾代表一个方法结束
+                    } elseif ($this->isVar($buffer_trim)) {
+                        $newComment = $this->getComment('reserved.variables.' . $this->varInfo);
+                        $this->varInfo = '';  // 变量只有一行，所以干完活就可以清空
                     }
                     // elseif ($const = isConst($buffer_trim)) {// 常量
                     //
@@ -136,6 +145,7 @@ class PsStubs
         $this->oldComment = '';
         $this->classInfo = [];
         $this->methodInfo = [];
+        $this->varInfo = '';
         $this->isAttribute = false;
     }
 
@@ -279,15 +289,17 @@ class PsStubs
         return false;
     }
 
-// 暂不验证
-    private function isVar($buffer): false|string
+    /**
+     * 验证预定义常量
+     * @param string $buffer
+     * @return false|string
+     */
+    private function isVar(string $buffer): false|string
     {
-        $buffer = str_replace(' ', '', $buffer);
-        $pre = '$';
-        if (str_starts_with($buffer, $pre)) {
-            $buffer = str_replace($pre, '', $buffer);
-            $buffer = str_replace('_', '', $buffer);
-            return explode("=", $buffer)[0];
+        $prefix = '$';
+        if (str_starts_with($buffer, $prefix)) {
+            $this->varInfo = str_replace([$prefix, '_'], '', explode(' ', $buffer)[0]);
+            return true;
         }
         return false;
     }
