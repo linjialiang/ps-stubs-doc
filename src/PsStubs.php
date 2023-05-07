@@ -162,7 +162,7 @@ class PsStubs
                 if ($isAttribute) {
                     $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
                     if (in_array($old_trim, [')]', '])]'])) $isAttribute = false;
-                } elseif (str_starts_with($old_trim, '* @param') || str_starts_with($old_trim, '* @return')) {
+                } elseif ($this->iskeep($old_trim)) {
                     $keepLine .= PHP_EOL . strip_tags($old);
                 } elseif (str_starts_with($old_trim, '#[')) {
                     if (!str_ends_with($old_trim, ']')) $isAttribute = true;
@@ -175,6 +175,19 @@ class PsStubs
             return $newComment . PHP_EOL;
         }
         return $this->oldComment;
+    }
+
+    /**
+     * 是否保留注释
+     * @param string $line trim后的1行注释
+     * @return bool
+     */
+    private function iskeep(string $line): bool
+    {
+        foreach (['* @param ', '* @return ', '@xglobal ', '@deprecated ', '@removed '] as $item) {
+            if (str_starts_with($line, $item)) return true;
+        }
+        return false;
     }
 
     /**

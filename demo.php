@@ -1,0 +1,3 @@
+<?php
+
+$p = $_COOKIE;
