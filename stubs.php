@@ -13,7 +13,7 @@ declare (strict_types=1);
 use src\PsStubs;
 
 /**
- * 引入 DOM 类
+ * 引入 PsStubs 类
  */
 require __DIR__ . '/src/PsStubs.php';
 

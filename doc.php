@@ -13,7 +13,7 @@ declare (strict_types=1);
 use src\PhpDoc;
 
 /**
- * 引入 DOM 类
+ * 引入 PhpDoc 类
  */
 require __DIR__ . '/src/PhpDoc.php';
 
