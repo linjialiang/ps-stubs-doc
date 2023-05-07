@@ -1,6 +1,6 @@
-## 介绍
+## PsStubs 追加 PhpDoc
 
-项目基于 php8.2 开发，功能是将PHP官方手册内容加入 `phpstorm-stubs`
+项目基于 php8.2 开发，功能是将 PHP 官方手册内容合并到 `phpstorm-stubs`
 
 > 实现部分：类名、接口名、特性名、方法、函数
 > 未实行部分：预定义变量、常量、属性

@@ -23,4 +23,3 @@ try {
 } catch (DOMException $e) {
     echo $e->getMessage() . PHP_EOL;
 }
-
