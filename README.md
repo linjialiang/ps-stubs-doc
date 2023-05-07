@@ -51,10 +51,9 @@
    # Linux
    ls -a --file-type | grep -v /$ | xargs rm -f
    rm -rf .github/ .idea/
-   cd ../
-   mv phpstorm-stubs/ phpstorm-stubs-zh/
-   tar -cJf phpstorm-stubs-zh.tar.xz phpstorm-stubs-zh/
    ```
+
+   > 提示：这些文件在不影响性能的情况下，可不用移除，因为不确定是否有用
 
 3. 进行文档处理
 
