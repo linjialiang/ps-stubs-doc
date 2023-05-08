@@ -85,7 +85,7 @@ class PhpDoc
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
                     if (empty($this->element) || empty(trim($this->element->textContent))) continue;
-                    $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html');
+                    $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html', true);
                 }
             }
             // 获取所需元素 DOMElement
@@ -98,26 +98,28 @@ class PhpDoc
     /**
      * 处理元素
      * @param string $savePath
+     * @param bool $isConst 是否常量
      * @return void
      */
-    private function handleElement(string $savePath): void
+    private function handleElement(string $savePath, bool $isConst = false): void
     {
-        if (!empty($this->element)) {
-            // 修改节点下链接
-            $links = $this->element->getElementsByTagName('a'); // DOMNodeList
-            $this->modifyUrl($links);
-            // 处理样式
-            $tags = $this->element->getElementsByTagName('*'); // DOMNodeList
-            $this->handleStyle($tags);
-            $html = $this->dom->saveHTML($this->element);
-            // 重设代码颜色以便在黑色主题下查看
-            $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
-            $html = str_replace('#0000BB', '#9876AA', $html);
-            $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
-            $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
-            // 文件保存到指定目录
-            $this->save_file($savePath, $html);
-        }
+        if (empty($this->element)) return;
+        // 修改节点下链接
+        $links = $this->element->getElementsByTagName('a'); // DOMNodeList
+        $this->modifyUrl($links);
+        // 处理样式
+        $tags = $this->element->getElementsByTagName('*'); // DOMNodeList
+        $this->handleStyle($tags);
+        $html = $this->dom->saveHTML($this->element);
+        // 重设代码颜色以便在黑色主题下查看
+        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+        $html = str_replace('#0000BB', '#9876AA', $html);
+        $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+        $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
+        // 移除首个标签
+        if ($isConst) $html = preg_replace(['/^<(td|dd|dt)>/', '/<\/(td|dd|dt)>$/'], '', $html);
+        // 文件保存到指定目录
+        $this->save_file($savePath, $html);
     }
 
     /**
