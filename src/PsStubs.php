@@ -25,6 +25,11 @@ class PsStubs
     private const PS_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 
     /**
+     * 收集常量临时存放目录
+     */
+    private const CONST_TEMP_PATH = __DIR__ . '/../raw/const_temp/';
+
+    /**
      * @var string 新的内容
      */
     private string $content;
@@ -48,6 +53,11 @@ class PsStubs
      * @var array 变量信息
      */
     private array $varInfo;
+
+    /**
+     * @var array 常量信息
+     */
+    private array $constInfo;
 
 
     /**
@@ -113,14 +123,10 @@ class PsStubs
                     } elseif ($this->isVar($buffer_trim)) {// 处理预定义变量，就几个
                         $newComment = $this->getComment('reserved.variables.' . $this->varInfo['file_name']);
                         $this->varInfo = [];  // 变量只有一行，所以干完活就可以清空
+                    } elseif ($this->isConst($buffer_trim)) {// 处理预定义常量、魔术常量
+                        $newComment = $this->getComment($this->constInfo['file_name'], self::CONST_TEMP_PATH);
+                        $this->constInfo = [];  // 变量只有一行，所以干完活就可以清空
                     }
-                    // elseif ($const = isConst($buffer_trim)) {// 常量
-                    //
-                    // } elseif ($var = isVar($buffer_trim)) {// 预定义变量
-                    //
-                    // } elseif (str_starts_with($buffer_trim, ')')) {//
-                    //     $passMethod = false; // 以 ')' 结尾代表一个方法结束
-                    // }
                     // ================ 处理注释 end ================ //
                     $this->content .= $newComment ?? $this->oldComment;
                     $this->content .= $buffer;
@@ -146,6 +152,7 @@ class PsStubs
         $this->classInfo = [];
         $this->methodInfo = [];
         $this->varInfo = [];
+        $this->constInfo = [];
         $this->isAttribute = false;
     }
 
@@ -154,11 +161,10 @@ class PsStubs
      * @param string $file 文件名称
      * @return string
      */
-    private function getComment(string $file): string
+    private function getComment(string $file, $tempPath = self::TEMP_PATH): string
     {
         // 不是常量替换下划线
-        $filePath = self::TEMP_PATH . (!str_starts_with($file, 'constant.') ? str_replace('_', '-', $file) : $file) . '.html';
-        $filePath = strtolower($filePath); // 大写转小写
+        $filePath = strtolower("$tempPath$file.html"); // 大写转小写
         if (is_file($filePath) && !empty($this->oldComment)) {
             $keepLine = '';
             $keepLine2 = '';
@@ -277,14 +283,17 @@ class PsStubs
         return false;
     }
 
-// 暂不验证
-    private function isConst($buffer): false|string
+    /**
+     * 验证预定义常量、魔术常量
+     * @param string $buffer
+     * @return bool
+     */
+    private function isConst(string $buffer): bool
     {
-        $buffer = str_replace(' ', '', $buffer);
-        $pre = "define('";
-        if (str_starts_with($buffer, $pre)) {
-            $buffer = str_replace($pre, '', $buffer);
-            return explode("'", $buffer)[0];
+        $constName = explode("'", $buffer)[1] ?? null;
+        if (str_starts_with($buffer, "define('") && !empty($constName)) {
+            $this->constInfo = ['real_name' => $constName, 'file_name' => strtolower($constName)];
+            return true;
         }
         return false;
     }
@@ -294,7 +303,8 @@ class PsStubs
      * @param string $buffer
      * @return bool
      */
-    private function isVar(string $buffer): bool
+    private
+    function isVar(string $buffer): bool
     {
         $prefix = '$';
         if (str_starts_with($buffer, $prefix)) {
@@ -311,7 +321,8 @@ class PsStubs
      * @param string $buffer
      * @return bool
      */
-    private function isComment(string $buffer): bool
+    private
+    function isComment(string $buffer): bool
     {
         if ($this->isAttribute) {
             if (in_array($buffer, [')]', '])]'])) $this->isAttribute = false;
