@@ -88,7 +88,6 @@ class PhpDoc
                     $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html');
                 }
             }
-            continue;
             // 获取所需元素 DOMElement
             $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
             $this->handleElement(self::TEMP_PATH . $fileName);
