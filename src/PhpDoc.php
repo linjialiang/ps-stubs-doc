@@ -76,16 +76,52 @@ class PhpDoc
                     $newFileName = $code->textContent;
                     if (
                         $code->parentNode->tagName !== 'strong' ||
+                        in_array($code->parentNode->parentNode->tagName, ['dd', 'dt']) ||
                         !preg_match('/^[A-Z_]+$/', $newFileName) ||
                         !str_starts_with(trim($code->parentNode->parentNode->textContent), $newFileName)
                     ) continue;
+                    $repeatList = [
+                        'E_ERROR',
+                        'E_WARNING',
+                        'E_PARSE',
+                        'E_NOTICE',
+                        'E_CORE_ERROR',
+                        'E_CORE_WARNING',
+                        'E_COMPILE_ERROR',
+                        'E_COMPILE_WARNING',
+                        'E_USER_ERROR',
+                        'E_USER_WARNING',
+                        'E_USER_NOTICE',
+                        'E_RECOVERABLE_ERROR',
+                        'E_DEPRECATED',
+                        'E_USER_DEPRECATED',
+                        'E_ALL',
+                        'E_STRICT',
+                        'PASSWORD_BCRYPT',
+                        'RADIUS_USER_PASSWORD',
+                        'RADIUS_CHAP_PASSWORD',
+                        'RADIUS_NAS_IP_ADDRESS',
+                        'RADIUS_STATE',
+                        'RADIUS_NAS_IDENTIFIER',
+                        'SQLSRV_SQLTYPE_NVARCHAR',
+                        'SQLSRV_SQLTYPE_VARBINARY',
+                        'SQLSRV_SQLTYPE_VARCHAR',
+                        'MYSQLI_REFRESH_REPLICA',
+                        'IMG_BICUBIC',
+                        'NAN',
+                        'INF',
+                    ];
+                    if (in_array($newFileName, $repeatList)) {
+                        $this->save_file(__DIR__ . '/../raw/const_list.log', "$newFileName|$filePath" . PHP_EOL, true);
+                    }
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
                     if (empty($this->element) || empty(trim($this->element->textContent))) continue;
-                    $this->save_file(__DIR__ . '/../raw/const_list.log', $newFileName . PHP_EOL, true);
+
                     $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html');
                 }
             } else {
+                continue;
                 // 获取所需元素 DOMElement
                 $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
                 $this->handleElement(self::TEMP_PATH . $fileName);
