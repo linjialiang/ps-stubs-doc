@@ -14,7 +14,6 @@ namespace src;
 
 use DOMDocument;
 use DOMElement;
-use DOMException;
 
 class PhpDoc
 {
@@ -57,7 +56,6 @@ class PhpDoc
     /**
      * 处理文档
      * @return void
-     * @throws DOMException
      */
     public function run(): void
     {
@@ -69,51 +67,55 @@ class PhpDoc
             if (!is_file($filePath) || !str_ends_with($fileName, '.html')) continue;
             // html文件载入DOM对象
             if (!@$this->dom->loadHTMLFile($filePath)) continue;
-            if (strpos($fileName, '.constants.')) {
-                $this->collectConst($filePath); // 收集常量
+            if (!!strpos($fileName, '.constants.')) {// 收集常量
+                $codeList = $this->dom->getElementsByTagName('code'); // DOMNodeList
+                foreach ($codeList as $code) {// DOMElement
+                    $newFileName = $code->textContent;
+                    if ($code->parentNode->tagName !== 'strong' || !preg_match('/^[A-Z_]+$/', $newFileName)) continue;
+                    // 获取所需元素 DOMElement
+                    $this->element = $code->parentNode->parentNode->nextElementSibling;
+                }
             } else {
-                break;
                 // 获取所需元素 DOMElement
                 $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
-                if (empty($this->element)) continue;
-                // 修改节点下链接
-                $this->modifyUrl();
-                // 处理样式
-                $this->handleStyle();
-                // 重设代码颜色以便在黑色主题下查看
-                $html = $this->dom->saveHTML($this->element);
-                $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
-                $html = str_replace('#0000BB', '#9876AA', $html);
-                $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
-                $html = str_replace('*/', '', $html);   // */ 不转义会导致phpstorm文档报错
-                // 文件保存到TEMP目录
-                $this->save_file(self::TEMP_PATH . $fileName, $html);
             }
+            if (empty($this->element)) continue;
+            // 修改节点下链接
+            $links = $this->element->getElementsByTagName('a'); // DOMNodeList
+            $this->modifyUrl($links);
+            // 处理样式
+            $tags = $this->element->getElementsByTagName('*');
+            $this->handleStyle($tags);
+            $html = $this->dom->saveHTML($this->element);
+            // 重设代码颜色以便在黑色主题下查看
+            $html = $this->setStyle($html);
+            // 文件保存到指定目录
+            $savePath = isset($newFileName) ? self::CONST_TEMP_PATH . $newFileName : self::TEMP_PATH . $fileName;
+            $this->save_file($savePath, $html);
         }
         closedir($handle);
     }
 
     /**
-     * 收集常量
-     * @param string $filePath 常量文件路径
-     * @return void
+     * 重设代码颜色以便在黑色主题下查看
+     * @param string $html
+     * @return string
      */
-    private function collectConst(string $filePath)
+    private function setStyle(string $html): string
     {
-        $codeList = $this->dom->getElementsByTagName('code');
-        foreach ($codeList as $code) {
-            var_dump($code);die;
-        }
-
+        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+        $html = str_replace('#0000BB', '#9876AA', $html);
+        $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+        return str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
     }
 
     /**
      * 修改链接
+     * @param $links
      * @return void
      */
-    private function modifyUrl(): void
+    private function modifyUrl($links): void
     {
-        $links = $this->element->getElementsByTagName('a'); // DOMNodeList
         $linkCount = $links->count();
         // 由于循环处理时，a元素会被文本节点覆盖，数量减少，只能从最大的开始处理，才能保证每个都执行到
         for ($i = $linkCount - 1; $i >= 0; $i--) {
@@ -123,7 +125,7 @@ class PhpDoc
             if (str_contains($url, 'http://') || str_contains($url, 'https://')) continue;
             // 已知类型, 方法,类静态方法..
             $className = $link->getAttribute('class');
-            if ($className === 'function' || $className === 'methodname' || strpos($link->textContent, '::')) {
+            if ($className === 'function' || $className === 'methodname' || !!strpos($link->textContent, '::')) {
                 // 替换子节点
                 // 创建一个新的文本节点，拿到$link的文本内容，并修改成 phpstorm 的方法链接
                 $link->parentNode->replaceChild($this->dom->createTextNode("{@link $link->textContent}"), $link);
@@ -136,12 +138,11 @@ class PhpDoc
 
     /**
      * 处理样式
+     * @param $tags
      * @return void
-     * @throws DOMException
      */
-    private function handleStyle(): void
+    private function handleStyle($tags): void
     {
-        $tags = $this->element->getElementsByTagName('*');
         // 修改样式
         foreach ($tags as $tag) {
             $className = $tag->getAttribute('class');
