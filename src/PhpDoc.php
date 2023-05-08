@@ -69,23 +69,42 @@ class PhpDoc
             if (!is_file($filePath) || !str_ends_with($fileName, '.html')) continue;
             // html文件载入DOM对象
             if (!@$this->dom->loadHTMLFile($filePath)) continue;
-            // 获取所需元素 DOMElement
-            $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
-            if (empty($this->element)) continue;
-            // 修改节点下链接
-            $this->modifyUrl();
-            // 处理样式
-            $this->handleStyle();
-            // 重设代码颜色以便在黑色主题下查看
-            $html = $this->dom->saveHTML($this->element);
-            $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
-            $html = str_replace('#0000BB', '#9876AA', $html);
-            $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
-            $html = str_replace('*/', '', $html);   // */ 不转义会导致phpstorm文档报错
-            // 文件保存到TEMP目录
-            $this->save_file(self::TEMP_PATH . $fileName, $html);
+            if (strpos($fileName, '.constants.')) {
+                $this->collectConst($filePath); // 收集常量
+            } else {
+                break;
+                // 获取所需元素 DOMElement
+                $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
+                if (empty($this->element)) continue;
+                // 修改节点下链接
+                $this->modifyUrl();
+                // 处理样式
+                $this->handleStyle();
+                // 重设代码颜色以便在黑色主题下查看
+                $html = $this->dom->saveHTML($this->element);
+                $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+                $html = str_replace('#0000BB', '#9876AA', $html);
+                $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+                $html = str_replace('*/', '', $html);   // */ 不转义会导致phpstorm文档报错
+                // 文件保存到TEMP目录
+                $this->save_file(self::TEMP_PATH . $fileName, $html);
+            }
         }
         closedir($handle);
+    }
+
+    /**
+     * 收集常量
+     * @param string $filePath 常量文件路径
+     * @return void
+     */
+    private function collectConst(string $filePath)
+    {
+        $codeList = $this->dom->getElementsByTagName('code');
+        foreach ($codeList as $code) {
+            var_dump($code);die;
+        }
+
     }
 
     /**

@@ -15,4 +15,9 @@ $p = PHP_FLOAT_MAX;
  */
 define('PHP_FLOAT_MAX', 1.7976931348623e+308);
 
-PHP_OUTPUT_HANDLER_START
+class Demo{
+    function abc()
+    {
+        echo __LINE__;
+    }
+}
