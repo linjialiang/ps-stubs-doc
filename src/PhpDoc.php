@@ -81,9 +81,9 @@ class PhpDoc
                         !str_starts_with(trim($code->parentNode->parentNode->textContent), $newFileName)
                     ) continue;
                     $repeatList = [
-                        'E_ERROR',
-                        'E_WARNING',
-                        'E_PARSE',
+                        'SQLSRV_SQLTYPE_VARCHAR',
+                        'SQLSRV_SQLTYPE_VARBINARY',
+                        'SQLSRV_SQLTYPE_NVARCHAR',
                         'E_NOTICE',
                         'E_CORE_ERROR',
                         'E_CORE_WARNING',
@@ -120,12 +120,11 @@ class PhpDoc
 
                     $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html');
                 }
-            } else {
-                continue;
-                // 获取所需元素 DOMElement
-                $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
-                $this->handleElement(self::TEMP_PATH . $fileName);
             }
+            continue;
+            // 获取所需元素 DOMElement
+            $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
+            $this->handleElement(self::TEMP_PATH . $fileName);
         }
         closedir($handle);
     }
