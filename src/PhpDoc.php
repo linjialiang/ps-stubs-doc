@@ -77,8 +77,7 @@ class PhpDoc
                     if (
                         $code->parentNode->tagName !== 'strong' ||
                         !preg_match('/^[A-Z_]+$/', $newFileName) ||
-                        $code->parentNode->parentNode->firstChild !== 'strong' ||
-                        !str_starts_with($code->parentNode->parentNode->textContent, $newFileName)
+                        !str_starts_with(trim($code->parentNode->parentNode->textContent), $newFileName)
                     ) continue;
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
