@@ -77,6 +77,7 @@ class PhpDoc
                     if ($code->parentNode->tagName !== 'strong' || !preg_match('/^[A-Z_]+$/', $newFileName)) continue;
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
+                    if (empty($this->element) || empty(trim($this->element->textContent))) continue;
                     $this->save_file(__DIR__ . '/../raw/const_list.log', $newFileName . PHP_EOL, true);
                     $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html');
                 }
