@@ -76,48 +76,15 @@ class PhpDoc
                     $newFileName = $code->textContent;
                     if (
                         $code->parentNode->tagName !== 'strong' ||
-                        !in_array($code->parentNode->parentNode->tagName, ['dd', 'dt']) ||
-                        !preg_match('/^[A-Z_]+$/', $newFileName) ||
-                        !str_starts_with(trim($code->parentNode->parentNode->textContent), $newFileName)
+                        !preg_match('/^[0-9A-Z_]+$/', $newFileName) ||
+                        !str_starts_with(trim($code->parentNode->parentNode->textContent), $newFileName) ||
+                        !in_array($code->parentNode->parentNode->tagName, ['dd', 'dt', 'td'])
                     ) continue;
-                    $repeatList = [
-                        'SQLSRV_SQLTYPE_VARCHAR',
-                        'SQLSRV_SQLTYPE_VARBINARY',
-                        'SQLSRV_SQLTYPE_NVARCHAR',
-                        'E_NOTICE',
-                        'E_CORE_ERROR',
-                        'E_CORE_WARNING',
-                        'E_COMPILE_ERROR',
-                        'E_COMPILE_WARNING',
-                        'E_USER_ERROR',
-                        'E_USER_WARNING',
-                        'E_USER_NOTICE',
-                        'E_RECOVERABLE_ERROR',
-                        'E_DEPRECATED',
-                        'E_USER_DEPRECATED',
-                        'E_ALL',
-                        'E_STRICT',
-                        'PASSWORD_BCRYPT',
-                        'RADIUS_USER_PASSWORD',
-                        'RADIUS_CHAP_PASSWORD',
-                        'RADIUS_NAS_IP_ADDRESS',
-                        'RADIUS_STATE',
-                        'RADIUS_NAS_IDENTIFIER',
-                        'SQLSRV_SQLTYPE_NVARCHAR',
-                        'SQLSRV_SQLTYPE_VARBINARY',
-                        'SQLSRV_SQLTYPE_VARCHAR',
-                        'MYSQLI_REFRESH_REPLICA',
-                        'IMG_BICUBIC',
-                        'NAN',
-                        'INF',
-                    ];
-                    if (in_array($newFileName, $repeatList)) {
-                        $this->save_file(__DIR__ . '/../raw/const_list.log', "$newFileName|$filePath" . PHP_EOL, true);
-                    }
+                    $tdList = ['errorfunc.constants.html', 'pcre.constants.html', 'language.constants.magic.html'];
+                    if (!in_array($fileName, $tdList) && $code->parentNode->parentNode->tagName === 'td') continue;
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
                     if (empty($this->element) || empty(trim($this->element->textContent))) continue;
-
                     $this->handleElement(self::CONST_TEMP_PATH . strtolower($newFileName) . '.html');
                 }
             }
