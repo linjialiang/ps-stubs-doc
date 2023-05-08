@@ -76,7 +76,7 @@ class PhpDoc
                     $newFileName = $code->textContent;
                     if (
                         $code->parentNode->tagName !== 'strong' ||
-                        in_array($code->parentNode->parentNode->tagName, ['dd', 'dt']) ||
+                        !in_array($code->parentNode->parentNode->tagName, ['dd', 'dt']) ||
                         !preg_match('/^[A-Z_]+$/', $newFileName) ||
                         !str_starts_with(trim($code->parentNode->parentNode->textContent), $newFileName)
                     ) continue;
