@@ -74,7 +74,12 @@ class PhpDoc
                 if ($codeList->count() === 0) continue;
                 foreach ($codeList as $code) {// DOMElement
                     $newFileName = $code->textContent;
-                    if ($code->parentNode->tagName !== 'strong' || !preg_match('/^[A-Z_]+$/', $newFileName)) continue;
+                    if (
+                        $code->parentNode->tagName !== 'strong' ||
+                        !preg_match('/^[A-Z_]+$/', $newFileName) ||
+                        $code->parentNode->parentNode->firstChild !== 'strong' ||
+                        str_starts_with($code->parentNode->parentNode->textContent, $newFileName)
+                    ) continue;
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
                     if (empty($this->element) || empty(trim($this->element->textContent))) continue;
