@@ -30,9 +30,14 @@ class PhpDoc
     private const PHP_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
 
     /**
-     * 临时文件存放目录
+     * 文件临时存放目录
      */
     private const TEMP_PATH = __DIR__ . '/../raw/temp/';
+
+    /**
+     * 收集常量临时存放目录
+     */
+    private const CONST_TEMP_PATH = __DIR__ . '/../raw/const_temp/';
 
     /**
      * @var DOMDocument DOM对象
