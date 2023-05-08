@@ -14,6 +14,7 @@ namespace src;
 
 use DOMDocument;
 use DOMElement;
+use DOMNodeList;
 
 class PhpDoc
 {
@@ -60,6 +61,7 @@ class PhpDoc
     public function run(): void
     {
         if (!is_dir(self::TEMP_PATH)) mkdir(self::TEMP_PATH);
+        if (!is_dir(self::CONST_TEMP_PATH)) mkdir(self::CONST_TEMP_PATH);
         // 开打php中文手册目录句柄
         if (!($handle = @opendir(self::PHP_PATH))) exit('目录打开失败');
         while (false !== ($fileName = readdir($handle))) {
@@ -69,52 +71,54 @@ class PhpDoc
             if (!@$this->dom->loadHTMLFile($filePath)) continue;
             if (!!strpos($fileName, '.constants.')) {// 收集常量
                 $codeList = $this->dom->getElementsByTagName('code'); // DOMNodeList
+                if ($codeList->count() === 0) continue;
                 foreach ($codeList as $code) {// DOMElement
                     $newFileName = $code->textContent;
                     if ($code->parentNode->tagName !== 'strong' || !preg_match('/^[A-Z_]+$/', $newFileName)) continue;
                     // 获取所需元素 DOMElement
                     $this->element = $code->parentNode->parentNode->nextElementSibling;
+                    $this->handleElement(self::CONST_TEMP_PATH . $newFileName);
                 }
             } else {
                 // 获取所需元素 DOMElement
                 $this->element = $this->dom->getElementById(substr($fileName, 0, strlen($fileName) - 5));
+                $this->handleElement(self::TEMP_PATH . $fileName);
             }
-            if (empty($this->element)) continue;
-            // 修改节点下链接
-            $links = $this->element->getElementsByTagName('a'); // DOMNodeList
-            $this->modifyUrl($links);
-            // 处理样式
-            $tags = $this->element->getElementsByTagName('*');
-            $this->handleStyle($tags);
-            $html = $this->dom->saveHTML($this->element);
-            // 重设代码颜色以便在黑色主题下查看
-            $html = $this->setStyle($html);
-            // 文件保存到指定目录
-            $savePath = isset($newFileName) ? self::CONST_TEMP_PATH . $newFileName : self::TEMP_PATH . $fileName;
-            $this->save_file($savePath, $html);
         }
         closedir($handle);
     }
 
     /**
-     * 重设代码颜色以便在黑色主题下查看
-     * @param string $html
-     * @return string
+     * 处理元素
+     * @param string $savePath
+     * @return void
      */
-    private function setStyle(string $html): string
+    private function handleElement(string $savePath): void
     {
-        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
-        $html = str_replace('#0000BB', '#9876AA', $html);
-        $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
-        return str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
+        if (!empty($this->element)) {
+            // 修改节点下链接
+            $links = $this->element->getElementsByTagName('a'); // DOMNodeList
+            $this->modifyUrl($links);
+            // 处理样式
+            $tags = $this->element->getElementsByTagName('*'); // DOMNodeList
+            $this->handleStyle($tags);
+            $html = $this->dom->saveHTML($this->element);
+            // 重设代码颜色以便在黑色主题下查看
+            $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+            $html = str_replace('#0000BB', '#9876AA', $html);
+            $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
+            $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错
+            // 文件保存到指定目录
+            $this->save_file($savePath, $html);
+        }
     }
 
     /**
      * 修改链接
-     * @param $links
+     * @param DOMNodeList $links
      * @return void
      */
-    private function modifyUrl($links): void
+    private function modifyUrl(DOMNodeList $links): void
     {
         $linkCount = $links->count();
         // 由于循环处理时，a元素会被文本节点覆盖，数量减少，只能从最大的开始处理，才能保证每个都执行到
@@ -138,10 +142,10 @@ class PhpDoc
 
     /**
      * 处理样式
-     * @param $tags
+     * @param DOMNodeList $tags
      * @return void
      */
-    private function handleStyle($tags): void
+    private function handleStyle(DOMNodeList $tags): void
     {
         // 修改样式
         foreach ($tags as $tag) {

@@ -18,8 +18,4 @@ use src\PhpDoc;
 require __DIR__ . '/src/PhpDoc.php';
 
 $handle = new PhpDoc();
-try {
-    $handle->run();
-} catch (DOMException $e) {
-    echo $e->getMessage() . PHP_EOL;
-}
+$handle->run();
