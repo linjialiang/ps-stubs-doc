@@ -115,7 +115,7 @@ class PsStubs
                     } elseif ($this->isMethod($buffer_trim)) { // 函数名、类方法名
                         $function = str_starts_with($this->methodInfo['name'], 'PS_UNRESERVE_PREFIX_') ?
                             substr($this->methodInfo['name'], 20) : $this->methodInfo['name'];
-                        $file = $this->methodInfo['prefix'] === 'function' ?
+                        $file = $this->methodInfo['prefix'] === 'function' && empty($this->classInfo) ?
                             "function.$function" : "{$this->classInfo['name']}.$function";
                         $newComment = $this->getComment($file);
                     } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
