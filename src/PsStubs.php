@@ -159,11 +159,13 @@ class PsStubs
     /**
      * 获取新的注释
      * @param string $file 文件名称
+     * @param string $tempPath
      * @return string
      */
-    private function getComment(string $file, $tempPath = self::TEMP_PATH): string
+    private function getComment(string $file, string $tempPath = self::TEMP_PATH): string
     {
         // 不是常量替换下划线
+        $file = $tempPath === self::CONST_TEMP_PATH ? $file : str_replace('_', '-', $file);
         $filePath = strtolower("$tempPath$file.html"); // 大写转小写
         if (is_file($filePath) && !empty($this->oldComment)) {
             $keepLine = '';
