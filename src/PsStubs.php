@@ -118,7 +118,7 @@ class PsStubs
                         $file = $this->methodInfo['prefix'] === 'function' ?
                             "function.$function" : "{$this->classInfo['name']}.$function";
                         $newComment = $this->getComment($file);
-                    } elseif (str_starts_with($buffer_trim, '):') || str_starts_with($buffer_trim, ') {')) {
+                    } elseif (str_starts_with($buffer_trim, '):') || $buffer_trim === ')') {
                         $this->methodInfo = []; // 以 ')' 结尾代表一个方法结束
                     } elseif ($this->isVar($buffer_trim)) {// 处理预定义变量，就几个
                         $newComment = $this->getComment('reserved.variables.' . $this->varInfo['file_name']);

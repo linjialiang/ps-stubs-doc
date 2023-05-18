@@ -19,6 +19,10 @@
 
 > 注意：对于 `PhpStorm-stubs` 低版本，需根据 PhpStorm 版本下载 github 上对应的标签，较新版本使用 master 分支即可
 
+> 警告：必须使用 phpstrom 将整个 `PhpStorm-stubs` 项目进行代码格式化
+
+![格式化项目](./assets/05.png)
+
 ## 3. 处理文档
 
 通过php脚本将php中文文档的内容转成phpstorm官方文档格式（这是增强版本）
