@@ -31,7 +31,7 @@
 
    ```shell
    # 1. 进入项目根目录
-   cd /server/www/php-doc/raw/
+   cd /server/www/ps-stubs-doc/raw/
    # 2. 解压PHP手册，得到 php-chunked-xhtml 目录
    tar -xzf php_manual_zh.tar.gz
    # 3. 解压 phpstorm-stubs 
@@ -51,7 +51,7 @@
    ```shell
    # phpstorm-stubs/ 目录下的文档已经处理完成，但是有些多于的文件是不需要的，需要删除
    # 查看目录下，把 非目录的文件 删除即可
-   cd /server/www/php-doc/raw/phpstorm-stubs/
+   cd /server/www/ps-stubs-doc/raw/phpstorm-stubs/
    # Linux
    ls -a --file-type | grep -v /$ | xargs rm -f
    rm -rf .github/ .idea/
@@ -63,7 +63,7 @@
 
    ```shell
    # 1. 进入项目根目录
-   cd /server/www/php-doc/
+   cd /server/www/ps-stubs-doc/
    # 2. 处理 php官方文档
    php doc.php
    # 3. 处理phpstorm-stubs 
