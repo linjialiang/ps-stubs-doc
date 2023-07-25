@@ -166,7 +166,7 @@ class PsStubs
     {
         // 不是常量替换下划线
         $file = $tempPath === self::CONST_TEMP_PATH ? $file : str_replace('_', '-', $file);
-        $filePath = strtolower("$tempPath$file.html"); // 大写转小写
+        $filePath = $tempPath . strtolower($file) . '.html'; // 大写转小写
         if (is_file($filePath) && !empty($this->oldComment)) {
             $keepLine = '';
             $keepLine2 = '';
