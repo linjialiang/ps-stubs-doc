@@ -123,7 +123,7 @@ class PhpDoc
         if ($isConst) $html = preg_replace(['/^<(td|dd|dt)>/', '/<\/(td|dd|dt)>$/'], '', $html);
         // 将 code 和 pre 修改成 code1 和 pre1
         $html = preg_replace(
-            ['<code>', '<code ', '</code>', '<pre>', '<pre ', '</pre>'],
+            ['#<code>#', '#<code >#', '#</code>#', '#<pre>#', '#<pre #', '#</pre>#'],
             ['<code1>', '<code1 ', '</code1>', '<pre1>', '<pre1 ', '</pre1>'],
             $html
         );
