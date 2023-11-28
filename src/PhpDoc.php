@@ -23,7 +23,7 @@ class PhpDoc
      * PHP文档外链
      * 也可设为本地链接 例: file:///D:/temp/php-chunked-xhtml/
      */
-    private const string PHP_URL = 'https://www.php.net/manual/zh/';
+    private const string PHP_URL = 'http://php-doc.e8so.com/';
 
     /**
      * php文档手册目录
