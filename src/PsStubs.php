@@ -17,17 +17,17 @@ class PsStubs
     /**
      * 临时文件存放目录
      */
-    private const TEMP_PATH = __DIR__ . '/../raw/temp/';
+    private const string TEMP_PATH = __DIR__ . '/../raw/temp/';
 
     /**
      * phpstorm-stubs 目录
      */
-    private const PS_PATH = __DIR__ . '/../raw/phpstorm-stubs';
+    private const string PS_PATH = __DIR__ . '/../raw/phpstorm-stubs';
 
     /**
      * 收集常量临时存放目录
      */
-    private const CONST_TEMP_PATH = __DIR__ . '/../raw/const_temp/';
+    private const string CONST_TEMP_PATH = __DIR__ . '/../raw/const_temp/';
 
     /**
      * @var string 新的内容

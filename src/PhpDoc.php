@@ -14,6 +14,7 @@ namespace src;
 
 use DOMDocument;
 use DOMElement;
+use DOMException;
 use DOMNodeList;
 
 class PhpDoc
@@ -22,22 +23,22 @@ class PhpDoc
      * PHP文档外链
      * 也可设为本地链接 例: file:///D:/temp/php-chunked-xhtml/
      */
-    private const PHP_URL = 'https://www.php.net/manual/zh/';
+    private const string PHP_URL = 'https://www.php.net/manual/zh/';
 
     /**
      * php文档手册目录
      */
-    private const PHP_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
+    private const string PHP_PATH = __DIR__ . '/../raw/php-chunked-xhtml/';
 
     /**
      * 文件临时存放目录
      */
-    private const TEMP_PATH = __DIR__ . '/../raw/temp/';
+    private const string TEMP_PATH = __DIR__ . '/../raw/temp/';
 
     /**
      * 收集常量临时存放目录
      */
-    private const CONST_TEMP_PATH = __DIR__ . '/../raw/const_temp/';
+    private const string CONST_TEMP_PATH = __DIR__ . '/../raw/const_temp/';
 
     /**
      * @var DOMDocument DOM对象
@@ -57,6 +58,7 @@ class PhpDoc
     /**
      * 处理文档
      * @return void
+     * @throws DOMException
      */
     public function run(): void
     {
@@ -100,6 +102,7 @@ class PhpDoc
      * @param string $savePath
      * @param bool $isConst 是否常量
      * @return void
+     * @throws DOMException
      */
     private function handleElement(string $savePath, bool $isConst = false): void
     {
@@ -153,6 +156,7 @@ class PhpDoc
      * 处理样式
      * @param DOMNodeList $tags
      * @return void
+     * @throws DOMException
      */
     private function handleStyle(DOMNodeList $tags): void
     {
