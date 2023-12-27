@@ -200,7 +200,7 @@ class PsStubs
             if ($fp2) {
                 while (false !== ($buffer = fgets($fp2, 4096))) { // 从文件指针中读取一行，带换行符
                     if (!empty(trim($buffer))) {
-                        $infix = str_starts_with($buffer, '<div class="phpcode">') ? " " : "*";
+                        $infix = str_starts_with($buffer, '<div class="phpcode') ? " " : "*";
                         $newComment .= "$prefix $infix $buffer";
                     }
                 }
