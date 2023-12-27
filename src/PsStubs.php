@@ -192,17 +192,21 @@ class PsStubs
                 }
             }
 
-            // 需要修改
+            // ======> 修改开始
             // $html = file_get_contents($filePath);
             // $newComment = "$prefix/**" . self::LINE_WRAP . "$prefix * " . $html . $keepLine . self::LINE_WRAP . "$prefix */";
-            $newComment = "$prefix/**";
+            $newComment = "$prefix/**" . self::LINE_WRAP;
             $fp2 = @fopen($filePath, 'r');
             if ($fp2) {
                 while (false !== ($buffer = fgets($fp2, 4096))) { // 从文件指针中读取一行，带换行符
-                    $newComment .= self::LINE_WRAP . "$prefix * " . $buffer;
+                    if (!empty(trim($buffer))) {
+                        $infix = str_starts_with($buffer, '<div class="phpcode">') ? " " : "*";
+                        $newComment .= "$prefix $infix $buffer";
+                    }
                 }
             }
             $newComment .= $keepLine . self::LINE_WRAP . "$prefix */";
+            // <===== 修改结束
 
             if (!empty($keepLine2)) $newComment .= $keepLine2;
             return $newComment . self::LINE_WRAP;
