@@ -191,8 +191,19 @@ class PsStubs
                     $keepLine2 .= self::LINE_WRAP . $old;  // 不去除html标签
                 }
             }
-            $html = file_get_contents($filePath);
-            $newComment = "$prefix/**" . self::LINE_WRAP . "$prefix * " . $html . $keepLine . self::LINE_WRAP . "$prefix */";
+
+            // 需要修改
+            // $html = file_get_contents($filePath);
+            // $newComment = "$prefix/**" . self::LINE_WRAP . "$prefix * " . $html . $keepLine . self::LINE_WRAP . "$prefix */";
+            $newComment = "$prefix/**";
+            $fp2 = @fopen($filePath, 'r');
+            if ($fp2) {
+                while (false !== ($buffer = fgets($fp2, 4096))) { // 从文件指针中读取一行，带换行符
+                    $newComment .= self::LINE_WRAP . "$prefix * " . $buffer;
+                }
+            }
+            $newComment .= $keepLine . self::LINE_WRAP . "$prefix */";
+
             if (!empty($keepLine2)) $newComment .= $keepLine2;
             return $newComment . self::LINE_WRAP;
         }
