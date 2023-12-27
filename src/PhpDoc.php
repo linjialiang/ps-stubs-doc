@@ -50,6 +50,11 @@ class PhpDoc
      */
     private DOMElement|null $element;
 
+    /**
+     * 统一换行符
+     */
+    private const string LINE_WRAP = "\n";
+
     public function __construct()
     {
         $this->dom = new DOMDocument(encoding: 'utf-8');
@@ -115,7 +120,7 @@ class PhpDoc
         $this->handleStyle($tags);
         $html = $this->dom->saveHTML($this->element);
         // 重设代码颜色以便在黑色主题下查看
-        $html = preg_replace('/ *' . PHP_EOL . ' */', '', $html); // 内容转成1行
+        $html = preg_replace('/ *' . self::LINE_WRAP . ' */', '', $html); // 内容转成1行
         $html = str_replace('#0000BB', '#9876AA', $html);
         $html = str_replace('/*', '//', $html); // */ 不转义会导致phpstorm文档报错
         $html = str_replace('*/', '', $html); // */ 不转义会导致phpstorm文档报错

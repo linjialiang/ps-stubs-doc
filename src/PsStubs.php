@@ -59,11 +59,15 @@ class PsStubs
      */
     private array $constInfo;
 
-
     /**
      * @var bool 注解，注释下的注解归入注释
      */
     private bool $isAttribute;
+
+    /**
+     * 统一换行符
+     */
+    private const string LINE_WRAP = "\n";
 
     /**
      * 递归获取所有目录
@@ -98,7 +102,7 @@ class PsStubs
             $this->clean();
             // 以只读方式打开一个文件
             while (false !== ($buffer = fgets($fp, 4096))) { // 从文件指针中读取一行，带换行符
-                $buffer_trim = trim($buffer); // 处理掉行首空白的行
+                $buffer_trim = trim($buffer); // 去掉行首和行尾的空白符
                 if (empty($buffer_trim)) {// 空白行
                     $this->content .= $this->oldComment; // 可能存在旧的注释
                     $this->content .= $buffer;           // 保留空白行
@@ -171,26 +175,26 @@ class PsStubs
             $keepLine = '';
             $keepLine2 = '';
             $isAttribute = false;   // 注解，是否注解
-            $olds = explode(PHP_EOL, $this->oldComment);
+            $olds = explode(self::LINE_WRAP, $this->oldComment);
             $prefix = $olds[0] === ltrim($olds[0]) ? '' :
                 substr($olds[0], 0, strlen($olds[0]) - strlen(ltrim($olds[0])));
             foreach ($olds as $old) {
                 $old_trim = trim($old);
                 // 保留 参数行 和 return行
                 if ($isAttribute) {
-                    $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
+                    $keepLine2 .= self::LINE_WRAP . $old;  // 不去除html标签
                     if (in_array($old_trim, [')]', '])]'])) $isAttribute = false;
                 } elseif ($this->isKeep($old_trim)) {
-                    $keepLine .= PHP_EOL . strip_tags($old);
+                    $keepLine .= self::LINE_WRAP . strip_tags($old);
                 } elseif (str_starts_with($old_trim, '#[')) {
                     if (!str_ends_with($old_trim, ']')) $isAttribute = true;
-                    $keepLine2 .= PHP_EOL . $old;  // 不去除html标签
+                    $keepLine2 .= self::LINE_WRAP . $old;  // 不去除html标签
                 }
             }
             $html = file_get_contents($filePath);
-            $newComment = "$prefix/**" . PHP_EOL . "$prefix * " . $html . $keepLine . PHP_EOL . "$prefix */";
+            $newComment = "$prefix/**" . self::LINE_WRAP . "$prefix * " . $html . $keepLine . self::LINE_WRAP . "$prefix */";
             if (!empty($keepLine2)) $newComment .= $keepLine2;
-            return $newComment . PHP_EOL;
+            return $newComment . self::LINE_WRAP;
         }
         return $this->oldComment;
     }
